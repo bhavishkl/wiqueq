@@ -168,7 +168,7 @@ export default function HomePage() {
           <Spin tip="Loading..." />
         ) : (
           <List
-            grid={{ gutter: 16, column: 1 }}
+            grid={{ gutter: 16, column: 2 }}
             dataSource={filteredQueues}
             renderItem={queue => (
               <List.Item>
@@ -185,6 +185,7 @@ export default function HomePage() {
                       }
                     />
                   }
+                  style={{ width: '100%' }}
                 >
                   <Row gutter={16}>
                     <Col span={12}>
