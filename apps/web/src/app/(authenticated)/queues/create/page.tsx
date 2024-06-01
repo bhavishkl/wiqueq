@@ -70,6 +70,8 @@ export default function CreateQueuePage() {
           .map((time: any) => time.format('HH:mm'))
           .join(' - '),
         services: services,
+        averageTime: values.averageTime,
+        operatingDays: values.operatingDays,
       }
       await Api.Queue.createOneByServiceProviderId(userId, queueValues)
       enqueueSnackbar('Queue created successfully', { variant: 'success' })
@@ -142,6 +144,44 @@ export default function CreateQueuePage() {
         </Form.Item>
         <Form.Item name="pincode" label="Pincode">
           <Input />
+        </Form.Item>
+        <Form.Item
+          name="averageTime"
+          label="Average Time"
+          rules={[{ required: true, message: 'Please enter the average time' }]}
+        >
+          <Input />
+        </Form.Item>
+        <Form.Item
+          name="operatingDays"
+          label="Operating Days"
+          rules={[{ required: true, message: 'Please select operating days' }]}
+        >
+          <Checkbox.Group>
+            <Row>
+              <Col span={8}>
+                <Checkbox value="Monday">Monday</Checkbox>
+              </Col>
+              <Col span={8}>
+                <Checkbox value="Tuesday">Tuesday</Checkbox>
+              </Col>
+              <Col span={8}>
+                <Checkbox value="Wednesday">Wednesday</Checkbox>
+              </Col>
+              <Col span={8}>
+                <Checkbox value="Thursday">Thursday</Checkbox>
+              </Col>
+              <Col span={8}>
+                <Checkbox value="Friday">Friday</Checkbox>
+              </Col>
+              <Col span={8}>
+                <Checkbox value="Saturday">Saturday</Checkbox>
+              </Col>
+              <Col span={8}>
+                <Checkbox value="Sunday">Sunday</Checkbox>
+              </Col>
+            </Row>
+          </Checkbox.Group>
         </Form.Item>
         <Title level={4}>Services</Title>
         {services.map((service, index) => (
