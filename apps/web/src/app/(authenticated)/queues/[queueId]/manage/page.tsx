@@ -31,6 +31,7 @@ export default function ManageQueuePage() {
   const [queue, setQueue] = useState<Model.Queue | null>(null)
   const [participants, setParticipants] = useState<Model.Participant[]>([])
   const [loading, setLoading] = useState(true)
+  const [location, setLocation] = useState<string | undefined>(undefined)
 
   useEffect(() => {
     const fetchQueueData = async () => {
@@ -41,6 +42,7 @@ export default function ManageQueuePage() {
         if (queueData.length > 0) {
           setQueue(queueData[0])
           setParticipants(queueData[0].participants || [])
+          setLocation(queueData[0].location)
         }
       } catch (error) {
         enqueueSnackbar('Failed to load queue data', { variant: 'error' })
@@ -139,6 +141,10 @@ export default function ManageQueuePage() {
                 >
                   {queue?.status === 'active' ? 'Pause Queue' : 'Resume Queue'}
                 </Button>
+                <Paragraph>
+                  <strong>Queue Name:</strong> {queue?.name} <br />
+                  <strong>Location:</strong> {location}
+                </Paragraph>
                 <Table
                   columns={columns}
                   dataSource={participants}
