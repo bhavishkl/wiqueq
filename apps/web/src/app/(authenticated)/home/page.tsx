@@ -41,6 +41,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false)
   const [favorites, setFavorites] = useState<string[]>([])
   const [participants, setParticipants] = useState<string[]>([])
+  const [participantsCount, setParticipantsCount] = useState<{ [key: string]: number }>({})
 
   useEffect(() => {
     const fetchData = async () => {
@@ -59,6 +60,12 @@ export default function HomePage() {
         setCategories(categoriesData)
         setFavorites(favoritesData.map(fav => fav.queueId))
         setParticipants(participantsData.map(part => part.queueId))
+        
+        const participantsCountData: { [key: string]: number } = {}
+        queuesData.forEach(queue => {
+          participantsCountData[queue.id] = queue.participants?.length || 0
+        })
+        setParticipantsCount(participantsCountData)
       } catch (error) {
         enqueueSnackbar('Failed to load data', { variant: 'error' })
       } finally {
@@ -81,6 +88,10 @@ export default function HomePage() {
     try {
       await Api.Participant.createOneByQueueId(queueId, { userId })
       setParticipants([...participants, queueId])
+      setParticipantsCount(prev => ({
+        ...prev,
+        [queueId]: (prev[queueId] || 0) + 1
+      }))
       enqueueSnackbar('Joined queue successfully', { variant: 'success' })
       router.push(`/queues/${queueId}`)
     } catch (error) {
@@ -102,6 +113,10 @@ export default function HomePage() {
       if (participantToLeave) {
         await Api.Participant.deleteOne(participantToLeave.id)
         setParticipants(participants.filter(id => id !== queueId))
+        setParticipantsCount(prev => ({
+          ...prev,
+          [queueId]: (prev[queueId] || 0) - 1
+        }))
         enqueueSnackbar('Left queue successfully', { variant: 'success' })
       }
     } catch (error) {
@@ -196,7 +211,7 @@ export default function HomePage() {
                       </Text>
                     </Col>
                     <Col span={12}>
-                      <Text>Participants: {queue.participants?.length}</Text>
+                      <Text>Participants: {participantsCount[queue.id]}</Text>
                     </Col>
                   </Row>
                   <Row gutter={16} style={{ marginTop: '10px' }}>
