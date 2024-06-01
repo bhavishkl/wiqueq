@@ -17,7 +17,6 @@ import {
   UserOutlined,
   MailOutlined,
   PhoneOutlined,
-  StarOutlined,
   StarFilled,
   LoadingOutlined,
 } from '@ant-design/icons'
@@ -53,7 +52,10 @@ export default function QueueDetailsPage() {
           includes: ['participants.user', 'reviews.user'],
         })
         setQueue(queueData)
-        setParticipants(queueData.participants || [])
+        const sortedParticipants = (queueData.participants || []).sort(
+          (a, b) => new Date(a.joinTime).getTime() - new Date(b.joinTime).getTime()
+        )
+        setParticipants(sortedParticipants)
         setReviews(queueData.reviews || [])
         setIsInQueue(
           queueData.participants?.some(
@@ -199,7 +201,7 @@ export default function QueueDetailsPage() {
                   <List.Item.Meta
                     avatar={<Avatar src={participant.user?.pictureUrl} />}
                     title={participant.user?.name}
-                    description={`Position: ${participant.position}`}
+                    description={`Position: ${participants.indexOf(participant) + 1}`}
                   />
                 </List.Item>
               )}
