@@ -75,8 +75,14 @@ export default function ManageQueuePage() {
         {}
       )
       setParticipants(prev =>
-        prev.map(p => (p.id === participantId ? updatedParticipant : p)),
+        prev.filter(p => p.id !== participantId),
       )
+      if (queue) {
+        setQueue(prevQueue => ({
+          ...prevQueue,
+          participants: prevQueue?.participants?.filter(p => p.id !== participantId),
+        }))
+      }
       enqueueSnackbar('Participant marked as served', { variant: 'success' })
     } catch (error) {
       enqueueSnackbar('Failed to mark participant as served', {
