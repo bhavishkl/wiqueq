@@ -17,10 +17,13 @@ const { Title, Paragraph } = Typography
 const { TextArea } = Input
 import { useAuthentication } from '@web/modules/authentication'
 import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
 import { useSnackbar } from 'notistack'
 import { useRouter, useParams } from 'next/navigation'
 import { Api, Model } from '@web/domain'
 import { PageLayout } from '@web/layouts/Page.layout'
+
+dayjs.extend(relativeTime)
 
 export default function ReviewsPage() {
   const router = useRouter()

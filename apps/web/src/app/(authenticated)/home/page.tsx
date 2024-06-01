@@ -82,6 +82,7 @@ export default function HomePage() {
       await Api.Participant.createOneByQueueId(queueId, { userId })
       setParticipants([...participants, queueId])
       enqueueSnackbar('Joined queue successfully', { variant: 'success' })
+      router.push(`/queues/${queueId}`)
     } catch (error) {
       enqueueSnackbar('Failed to join queue', { variant: 'error' })
     } finally {
