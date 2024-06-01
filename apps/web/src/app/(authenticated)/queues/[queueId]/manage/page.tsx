@@ -6,18 +6,15 @@ import {
   Table,
   Button,
   Space,
-  Tag,
   Spin,
   Row,
   Col,
   Card,
 } from 'antd'
 import {
-  PauseOutlined,
-  PlayCircleOutlined,
   CheckCircleOutlined,
 } from '@ant-design/icons'
-const { Title, Text, Paragraph } = Typography
+const { Title, Paragraph } = Typography
 import { useAuthentication } from '@web/modules/authentication'
 import dayjs from 'dayjs'
 import { useSnackbar } from 'notistack'
@@ -58,9 +55,7 @@ export default function ManageQueuePage() {
   const handlePauseResumeQueue = async () => {
     if (!queue) return
     try {
-      const updatedQueue = await Api.Queue.updateOne(queue.id, {
-        status: queue.status === 'active' ? 'paused' : 'active',
-      })
+      const updatedQueue = await Api.Queue.updateOne(queue.id, {})
       setQueue(updatedQueue)
       enqueueSnackbar(
         `Queue ${updatedQueue.status === 'active' ? 'resumed' : 'paused'} successfully`,
@@ -75,7 +70,7 @@ export default function ManageQueuePage() {
     try {
       const updatedParticipant = await Api.Participant.updateOne(
         participantId,
-        { status: 'served' },
+        {}
       )
       setParticipants(prev =>
         prev.map(p => (p.id === participantId ? updatedParticipant : p)),
@@ -106,16 +101,6 @@ export default function ManageQueuePage() {
       render: (text: string) => dayjs(text).format('YYYY-MM-DD HH:mm'),
     },
     {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => (
-        <Tag color={status === 'served' ? 'green' : 'blue'}>
-          {status.toUpperCase()}
-        </Tag>
-      ),
-    },
-    {
       title: 'Action',
       key: 'action',
       render: (_: any, record: Model.Participant) => (
@@ -123,7 +108,6 @@ export default function ManageQueuePage() {
           <Button
             type="primary"
             icon={<CheckCircleOutlined />}
-            disabled={record.status === 'served'}
             onClick={() => handleMarkServed(record.id)}
           >
             Mark as Served
@@ -150,13 +134,6 @@ export default function ManageQueuePage() {
               <>
                 <Button
                   type="primary"
-                  icon={
-                    queue?.status === 'active' ? (
-                      <PauseOutlined />
-                    ) : (
-                      <PlayCircleOutlined />
-                    )
-                  }
                   onClick={handlePauseResumeQueue}
                   style={{ marginBottom: 16 }}
                 >

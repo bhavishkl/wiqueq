@@ -28,6 +28,7 @@ import { useSnackbar } from 'notistack'
 import { useRouter, useParams } from 'next/navigation'
 import { Api, Model } from '@web/domain'
 import { PageLayout } from '@web/layouts/Page.layout'
+import { io } from 'socket.io-client'
 
 export default function QueueDetailsPage() {
   const router = useRouter()
@@ -71,6 +72,24 @@ export default function QueueDetailsPage() {
 
     fetchQueueDetails()
   }, [queueId, userId])
+
+  useEffect(() => {
+    const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || '')
+
+    socket.on('participantJoined', (newParticipant: Model.Participant) => {
+      setParticipants(prevParticipants => [...prevParticipants, newParticipant])
+    })
+
+    socket.on('participantLeft', (leftParticipant: Model.Participant) => {
+      setParticipants(prevParticipants =>
+        prevParticipants.filter(participant => participant.id !== leftParticipant.id)
+      )
+    })
+
+    return () => {
+      socket.disconnect()
+    }
+  }, [])
 
   const handleJoinQueue = async () => {
     setIsLoading(true)
