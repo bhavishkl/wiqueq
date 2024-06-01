@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Typography, Button, Card, Row, Col, Space, Popconfirm } from 'antd'
+import { Typography, Button, Row, Col, Space, Popconfirm, List } from 'antd'
 import {
   EditOutlined,
   DeleteOutlined,
@@ -51,54 +51,59 @@ export default function QueueDashboardPage() {
       <Title level={2}>Queue Dashboard</Title>
       <Paragraph>Manage all your queues from one place.</Paragraph>
       <Row gutter={[16, 16]} justify="center">
-        {queues.map(queue => (
-          <Col key={queue.id} xs={24} sm={12} md={8} lg={6}>
-            <Card
-              title={queue.name}
-              actions={[
-                <Button
-                  icon={<SettingOutlined />}
-                  onClick={() => router.push(`/queues/${queue.id}/manage`)}
-                >
-                  Manage
-                </Button>,
-                <Button
-                  icon={<EditOutlined />}
-                  onClick={() => router.push(`/queues/${queue.id}/edit`)}
-                >
-                  Edit
-                </Button>,
-                <Popconfirm
-                  title="Are you sure you want to delete this queue?"
-                  onConfirm={() => handleDeleteQueue(queue.id)}
-                  okText="Yes"
-                  cancelText="No"
-                >
-                  <Button icon={<DeleteOutlined />} danger>
-                    Delete
-                  </Button>
-                </Popconfirm>,
-                <Button
-                  icon={<BarChartOutlined />}
-                  onClick={() =>
-                    router.push(`/queue-analytics?queueId=${queue.id}`)
-                  }
-                >
-                  Analytics
-                </Button>,
-              ]}
-            >
-              <Space direction="vertical">
-                <Text>{queue.description}</Text>
-                <Text type="secondary">Location: {queue.location}</Text>
-                <Text type="secondary">Category: {queue.category}</Text>
-                <Text type="secondary">
-                  Operating Hours: {queue.operatingHours}
-                </Text>
-              </Space>
-            </Card>
-          </Col>
-        ))}
+        <Col span={24}>
+          <List
+            itemLayout="vertical"
+            dataSource={queues}
+            renderItem={queue => (
+              <List.Item
+                key={queue.id}
+                actions={[
+                  <Button
+                    icon={<SettingOutlined />}
+                    onClick={() => router.push(`/queues/${queue.id}/manage`)}
+                  >
+                    Manage
+                  </Button>,
+                  <Button
+                    icon={<EditOutlined />}
+                    onClick={() => router.push(`/queues/${queue.id}/edit`)}
+                  >
+                    Edit
+                  </Button>,
+                  <Popconfirm
+                    title="Are you sure you want to delete this queue?"
+                    onConfirm={() => handleDeleteQueue(queue.id)}
+                    okText="Yes"
+                    cancelText="No"
+                  >
+                    <Button icon={<DeleteOutlined />} danger>
+                      Delete
+                    </Button>
+                  </Popconfirm>,
+                  <Button
+                    icon={<BarChartOutlined />}
+                    onClick={() =>
+                      router.push(`/queue-analytics?queueId=${queue.id}`)
+                    }
+                  >
+                    Analytics
+                  </Button>,
+                ]}
+              >
+                <Space direction="vertical">
+                  <Title level={4}>{queue.name}</Title>
+                  <Text>{queue.description}</Text>
+                  <Text type="secondary">Location: {queue.location}</Text>
+                  <Text type="secondary">Category: {queue.category}</Text>
+                  <Text type="secondary">
+                    Operating Hours: {queue.operatingHours}
+                  </Text>
+                </Space>
+              </List.Item>
+            )}
+          />
+        </Col>
       </Row>
     </PageLayout>
   )
