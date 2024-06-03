@@ -260,6 +260,11 @@ export default function HomePage() {
                       </Button>
                     </Col>
                   </Row>
+                  <Row gutter={16} style={{ marginTop: '10px' }}>
+                    <Col span={24}>
+                      <Text>Category: {queue.category}</Text>
+                    </Col>
+                  </Row>
                 </Card>
               </List.Item>
             )}
