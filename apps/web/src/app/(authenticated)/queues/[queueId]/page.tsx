@@ -149,11 +149,17 @@ export default function QueueDetailsPage() {
   return (
     <PageLayout layout="narrow">
       <Title level={2}>{queue?.name}</Title>
-      <Paragraph>{queue?.description}</Paragraph>
       <Avatar src={queue?.logoUrl} size={64} icon={<UserOutlined />} />
+      <Paragraph>{queue?.description}</Paragraph>
       <Paragraph>
         <MailOutlined /> {queue?.contactEmail} <br />
         <PhoneOutlined /> {queue?.contactPhone}
+      </Paragraph>
+      <Paragraph>
+        <strong>Operating Hours:</strong> {queue?.operatingHours}
+      </Paragraph>
+      <Paragraph>
+        <strong>Address:</strong> {queue?.location}
       </Paragraph>
       <Paragraph>
         <StarFilled />{' '}
