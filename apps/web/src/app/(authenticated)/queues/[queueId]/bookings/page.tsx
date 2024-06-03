@@ -32,6 +32,8 @@ export default function BookingsPage() {
 
   const [services, setServices] = useState<Model.Service[]>([])
   const [loading, setLoading] = useState<boolean>(true)
+  const [queueName, setQueueName] = useState<string>('')
+  const [location, setLocation] = useState<string>('')
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -41,7 +43,10 @@ export default function BookingsPage() {
           includes: ['services'],
         })
         if (queues.length > 0) {
-          setServices(queues[0].services || [])
+          const queue = queues[0]
+          setServices(queue.services || [])
+          setQueueName(queue.name)
+          setLocation(queue.location)
         }
       } catch (error) {
         enqueueSnackbar('Failed to fetch services', { variant: 'error' })
@@ -86,6 +91,12 @@ export default function BookingsPage() {
         <Col span={24}>
           <Title level={2}>Book a Slot</Title>
           <Text>Select a date, time, and service to book a slot.</Text>
+        </Col>
+      </Row>
+      <Row justify="center" style={{ marginTop: '20px' }}>
+        <Col span={24}>
+          <Title level={4}>Queue Name: {queueName}</Title>
+          <Text>Location: {location}</Text>
         </Col>
       </Row>
       <Row justify="center" style={{ marginTop: '20px' }}>
