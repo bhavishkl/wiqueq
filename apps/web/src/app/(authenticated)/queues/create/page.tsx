@@ -70,7 +70,7 @@ export default function CreateQueuePage() {
           .map((time: any) => time.format('HH:mm'))
           .join(' - '),
         services: services,
-        averageTime: values.averageTime,
+        averageTime: values.averageTime.format('HH:mm'),
         operatingDays: values.operatingDays,
       }
       await Api.Queue.createOneByServiceProviderId(userId, queueValues)
@@ -150,38 +150,22 @@ export default function CreateQueuePage() {
           label="Average Time"
           rules={[{ required: true, message: 'Please enter the average time' }]}
         >
-          <Input />
+          <TimePicker format="HH:mm" />
         </Form.Item>
         <Form.Item
           name="operatingDays"
           label="Operating Days"
           rules={[{ required: true, message: 'Please select operating days' }]}
         >
-          <Checkbox.Group>
-            <Row>
-              <Col span={8}>
-                <Checkbox value="Monday">Monday</Checkbox>
-              </Col>
-              <Col span={8}>
-                <Checkbox value="Tuesday">Tuesday</Checkbox>
-              </Col>
-              <Col span={8}>
-                <Checkbox value="Wednesday">Wednesday</Checkbox>
-              </Col>
-              <Col span={8}>
-                <Checkbox value="Thursday">Thursday</Checkbox>
-              </Col>
-              <Col span={8}>
-                <Checkbox value="Friday">Friday</Checkbox>
-              </Col>
-              <Col span={8}>
-                <Checkbox value="Saturday">Saturday</Checkbox>
-              </Col>
-              <Col span={8}>
-                <Checkbox value="Sunday">Sunday</Checkbox>
-              </Col>
-            </Row>
-          </Checkbox.Group>
+          <Select mode="multiple">
+            <Option value="Monday">Monday</Option>
+            <Option value="Tuesday">Tuesday</Option>
+            <Option value="Wednesday">Wednesday</Option>
+            <Option value="Thursday">Thursday</Option>
+            <Option value="Friday">Friday</Option>
+            <Option value="Saturday">Saturday</Option>
+            <Option value="Sunday">Sunday</Option>
+          </Select>
         </Form.Item>
         <Title level={4}>Services</Title>
         {services.map((service, index) => (
