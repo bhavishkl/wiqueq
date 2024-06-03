@@ -23,6 +23,7 @@ export default function QueueDashboardPage() {
   const userId = authentication.user?.id
   const { enqueueSnackbar } = useSnackbar()
   const [queues, setQueues] = useState<Model.Queue[]>([])
+  const [categories, setCategories] = useState<Model.QueueCategory[]>([])
 
   useEffect(() => {
     if (userId) {
@@ -34,6 +35,14 @@ export default function QueueDashboardPage() {
           enqueueSnackbar('Failed to load queues', { variant: 'error' })
         })
     }
+
+    Api.QueueCategory.findMany()
+      .then(categories => {
+        setCategories(categories)
+      })
+      .catch(error => {
+        enqueueSnackbar('Failed to load categories', { variant: 'error' })
+      })
   }, [userId])
 
   const handleDeleteQueue = async (queueId: string) => {
@@ -44,6 +53,11 @@ export default function QueueDashboardPage() {
     } catch (error) {
       enqueueSnackbar('Failed to delete queue', { variant: 'error' })
     }
+  }
+
+  const getCategoryName = (categoryId: string) => {
+    const category = categories.find(cat => cat.id === categoryId)
+    return category ? category.name : 'Unknown'
   }
 
   return (
@@ -79,7 +93,7 @@ export default function QueueDashboardPage() {
                   >
                     <Button icon={<DeleteOutlined />} danger>
                       Delete
-                    </Button>
+                    </Button>,
                   </Popconfirm>,
                   <Button
                     icon={<BarChartOutlined />}
@@ -95,7 +109,7 @@ export default function QueueDashboardPage() {
                   <Title level={4}>{queue.name}</Title>
                   <Text>{queue.description}</Text>
                   <Text type="secondary">Location: {queue.location}</Text>
-                  <Text type="secondary">Category: {queue.category}</Text>
+                  <Text type="secondary">Category: {getCategoryName(queue.category)}</Text>
                   <Text type="secondary">
                     Operating Hours: {queue.operatingHours}
                   </Text>
