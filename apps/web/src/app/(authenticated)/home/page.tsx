@@ -158,6 +158,11 @@ export default function HomePage() {
     )
   })
 
+  const getCategoryName = (categoryId: string) => {
+    const category = categories.find(cat => cat.id === categoryId)
+    return category ? category.name : 'Unknown Category'
+  }
+
   return (
     <PageLayout layout="narrow">
       <Title level={2}>Virtual Queues</Title>
@@ -175,7 +180,7 @@ export default function HomePage() {
           style={{ width: '100%' }}
         >
           {categories.map(category => (
-            <Option key={category.id} value={category.name}>
+            <Option key={category.id} value={category.id}>
               {category.name}
             </Option>
           ))}
@@ -262,7 +267,7 @@ export default function HomePage() {
                   </Row>
                   <Row gutter={16} style={{ marginTop: '10px' }}>
                     <Col span={24}>
-                      <Text>Category: {queue.category}</Text>
+                      <Text>Category: {getCategoryName(queue.category)}</Text>
                     </Col>
                   </Row>
                 </Card>
