@@ -63,6 +63,11 @@ export class AuthorizationController {
         this.exception.invalidCodeVerification(error)
       })
 
+    if (!code) {
+      this.exception.invalidCodeVerification(new Error('Code not found'))
+      return
+    }
+
     await this.authorizationDomainFacade.code.check(code).catch(error => {
       this.exception.expiredCodeVerification(error)
     })
