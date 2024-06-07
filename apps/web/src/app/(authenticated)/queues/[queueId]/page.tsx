@@ -1,34 +1,34 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import {
-  Tabs,
-  Button,
-  Spin,
-  Typography,
-  List,
-  Avatar,
-  Modal,
-  Form,
-  Input,
-  Rate,
-} from 'antd'
-import {
-  UserOutlined,
+  LoadingOutlined,
   MailOutlined,
   PhoneOutlined,
   StarFilled,
-  LoadingOutlined,
+  UserOutlined,
 } from '@ant-design/icons'
-const { Title, Text, Paragraph } = Typography
-const { TabPane } = Tabs
-import { useAuthentication } from '@web/modules/authentication'
-import dayjs from 'dayjs'
-import { useSnackbar } from 'notistack'
-import { useRouter, useParams } from 'next/navigation'
 import { Api, Model } from '@web/domain'
 import { PageLayout } from '@web/layouts/Page.layout'
+import { useAuthentication } from '@web/modules/authentication'
+import {
+  Avatar,
+  Button,
+  Form,
+  Input,
+  List,
+  Modal,
+  Rate,
+  Spin,
+  Tabs,
+  Typography,
+} from 'antd'
+import dayjs from 'dayjs'
+import { useParams, useRouter } from 'next/navigation'
+import { useSnackbar } from 'notistack'
+import { useEffect, useState } from 'react'
 import { io } from 'socket.io-client'
+const { Title, Text, Paragraph } = Typography
+const { TabPane } = Tabs
 
 export default function QueueDetailsPage() {
   const router = useRouter()
@@ -43,7 +43,6 @@ export default function QueueDetailsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isInQueue, setIsInQueue] = useState(false)
   const [isReviewModalVisible, setIsReviewModalVisible] = useState(false)
-  const [userPosition, setUserPosition] = useState<number | null>(null)
 
   const queueId = params.queueId
 
@@ -64,10 +63,6 @@ export default function QueueDetailsPage() {
             participant => participant.userId === userId,
           ) || false,
         )
-        const currentUser = queueData.participants?.find(
-          participant => participant.userId === userId,
-        )
-        setUserPosition(currentUser?.position || null)
       } catch (error) {
         enqueueSnackbar('Failed to load queue details', { variant: 'error' })
       } finally {
@@ -100,6 +95,8 @@ export default function QueueDetailsPage() {
     setIsLoading(true)
     try {
       await Api.Participant.createOneByQueueId(queueId, { userId })
+      const updatedParticipants = await Api.Participant.findManyByQueueId(queueId)
+      setParticipants(updatedParticipants)
       setIsInQueue(true)
       enqueueSnackbar('Successfully joined the queue', { variant: 'success' })
     } catch (error) {
@@ -117,6 +114,8 @@ export default function QueueDetailsPage() {
       )
       if (participant) {
         await Api.Participant.deleteOne(participant.id)
+        const updatedParticipants = await Api.Participant.findManyByQueueId(queueId)
+        setParticipants(updatedParticipants)
         setIsInQueue(false)
         enqueueSnackbar('Successfully left the queue', { variant: 'success' })
       }
@@ -179,18 +178,18 @@ export default function QueueDetailsPage() {
           {isInQueue && (
             <>
               <Paragraph>
-                Your position: {userPosition !== null ? userPosition : 'N/A'}
+                Your position: {participants.find(p => p.userId === userId)?.position || 'N/A'}
               </Paragraph>
               <Paragraph>
                 Estimated wait time:{' '}
                 {dayjs()
-                  .add(userPosition || 0, 'minute')
+                  .add(participants.find(p => p.userId === userId)?.position || 0, 'minute')
                   .format('HH:mm')}
               </Paragraph>
             </>
           )}
           <List
-            header={<div>Top 3 Reviews</div>}
+            header={<div>Reviews</div>}
             dataSource={reviews.slice(0, 3)}
             renderItem={review => (
               <List.Item>
