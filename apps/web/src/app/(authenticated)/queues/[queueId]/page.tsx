@@ -43,6 +43,7 @@ export default function QueueDetailsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isInQueue, setIsInQueue] = useState(false)
   const [isReviewModalVisible, setIsReviewModalVisible] = useState(false)
+  const [userPosition, setUserPosition] = useState<number | null>(null)
 
   const queueId = params.queueId
 
@@ -63,6 +64,10 @@ export default function QueueDetailsPage() {
             participant => participant.userId === userId,
           ) || false,
         )
+        const currentUser = queueData.participants?.find(
+          participant => participant.userId === userId,
+        )
+        setUserPosition(currentUser?.position || null)
       } catch (error) {
         enqueueSnackbar('Failed to load queue details', { variant: 'error' })
       } finally {
@@ -174,22 +179,12 @@ export default function QueueDetailsPage() {
           {isInQueue && (
             <>
               <Paragraph>
-                Your position:{' '}
-                {
-                  participants.find(
-                    participant => participant.userId === userId,
-                  )?.position
-                }
+                Your position: {userPosition !== null ? userPosition : 'N/A'}
               </Paragraph>
               <Paragraph>
                 Estimated wait time:{' '}
                 {dayjs()
-                  .add(
-                    participants.find(
-                      participant => participant.userId === userId,
-                    )?.position || 0,
-                    'minute',
-                  )
+                  .add(userPosition || 0, 'minute')
                   .format('HH:mm')}
               </Paragraph>
             </>
