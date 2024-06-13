@@ -3,9 +3,8 @@
 import { useEffect, useState } from 'react'
 import {
   Typography,
-  Table,
+  Carousel,
   Button,
-  Space,
   Spin,
   Row,
   Col,
@@ -88,40 +87,6 @@ export default function ManageQueuePage() {
     }
   }
 
-  const columns = [
-    {
-      title: 'Name',
-      dataIndex: ['user', 'name'],
-      key: 'name',
-    },
-    {
-      title: 'Email',
-      dataIndex: ['user', 'email'],
-      key: 'email',
-    },
-    {
-      title: 'Join Time',
-      dataIndex: 'joinTime',
-      key: 'joinTime',
-      render: (text: string) => dayjs(text).format('YYYY-MM-DD HH:mm'),
-    },
-    {
-      title: 'Action',
-      key: 'action',
-      render: (_: any, record: Model.Participant) => (
-        <Space size="middle">
-          <Button
-            type="primary"
-            icon={<CheckCircleOutlined />}
-            onClick={() => handleMarkServed(record.id)}
-          >
-            Mark as Served
-          </Button>
-        </Space>
-      ),
-    },
-  ]
-
   return (
     <PageLayout layout="narrow">
       <Row justify="center">
@@ -148,12 +113,24 @@ export default function ManageQueuePage() {
                   <strong>Queue Name:</strong> {queue?.name} <br />
                   <strong>Location:</strong> {location}
                 </Paragraph>
-                <Table
-                  columns={columns}
-                  dataSource={participants}
-                  rowKey="id"
-                  pagination={false}
-                />
+                <Carousel>
+                  {participants?.map(participant => (
+                    <Card key={participant.id} style={{ margin: '0 10px' }}>
+                      <Title level={4}>{participant.user?.name}</Title>
+                      <Paragraph>
+                        <strong>Position:</strong> {participant.position} <br />
+                        <strong>Join Time:</strong> {dayjs(participant.joinTime).format('YYYY-MM-DD HH:mm')}
+                      </Paragraph>
+                      <Button
+                        type="primary"
+                        icon={<CheckCircleOutlined />}
+                        onClick={() => handleMarkServed(participant.id)}
+                      >
+                        Mark as Served
+                      </Button>
+                    </Card>
+                  ))}
+                </Carousel>
               </>
             )}
           </Card>
