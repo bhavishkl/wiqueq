@@ -70,10 +70,7 @@ export default function ManageQueuePage() {
 
   const handleMarkServed = async (participantId: string) => {
     try {
-      const updatedParticipant = await Api.Participant.updateOne(
-        participantId,
-        {}
-      )
+      await Api.Participant.deleteOne(participantId)
       setParticipants(prev =>
         prev.filter(p => p.id !== participantId),
       )
