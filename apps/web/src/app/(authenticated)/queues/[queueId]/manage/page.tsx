@@ -31,6 +31,7 @@ export default function ManageQueuePage() {
   const [participants, setParticipants] = useState<Model.Participant[]>([])
   const [loading, setLoading] = useState(true)
   const [location, setLocation] = useState<string | undefined>(undefined)
+  const [participantCount, setParticipantCount] = useState<number>(0)
 
   useEffect(() => {
     const fetchQueueData = async () => {
@@ -42,6 +43,7 @@ export default function ManageQueuePage() {
           setQueue(queueData[0])
           setParticipants(queueData[0].participants || [])
           setLocation(queueData[0].location)
+          setParticipantCount(queueData[0].participants?.length || 0)
         }
       } catch (error) {
         enqueueSnackbar('Failed to load queue data', { variant: 'error' })
@@ -78,6 +80,7 @@ export default function ManageQueuePage() {
           ...prevQueue,
           participants: prevQueue?.participants?.filter(p => p.id !== participantId),
         }))
+        setParticipantCount(prevCount => prevCount - 1)
       }
       enqueueSnackbar('Participant marked as served', { variant: 'success' })
     } catch (error) {
@@ -111,7 +114,8 @@ export default function ManageQueuePage() {
                 </Button>
                 <Paragraph>
                   <strong>Queue Name:</strong> {queue?.name} <br />
-                  <strong>Location:</strong> {location}
+                  <strong>Location:</strong> {location} <br />
+                  <strong>Participant Count:</strong> {participantCount}
                 </Paragraph>
                 <Carousel>
                   {participants?.map(participant => (
