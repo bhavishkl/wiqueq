@@ -20,6 +20,7 @@ import { useSnackbar } from 'notistack'
 import { useRouter, useParams } from 'next/navigation'
 import { Api, Model } from '@web/domain'
 import { PageLayout } from '@web/layouts/Page.layout'
+import { io } from 'socket.io-client'
 
 export default function ManageQueuePage() {
   const router = useRouter()
@@ -54,6 +55,19 @@ export default function ManageQueuePage() {
 
     fetchQueueData()
   }, [userId])
+
+  useEffect(() => {
+    const socket = io()
+
+    socket.on('newParticipant', (newParticipant: Model.Participant) => {
+      setParticipants(prev => [...prev, newParticipant])
+      setParticipantCount(prevCount => prevCount + 1)
+    })
+
+    return () => {
+      socket.disconnect()
+    }
+  }, [])
 
   const handlePauseResumeQueue = async () => {
     if (!queue) return
