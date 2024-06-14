@@ -1,3 +1,5 @@
+"use client"; // Add this line at the top of your file
+
 import {
   ClockCircleOutlined,
   EnvironmentOutlined,
@@ -6,10 +8,10 @@ import {
   PhoneOutlined,
   StarFilled,
   UserOutlined,
-} from '@ant-design/icons'
-import { Api, Model } from '@web/domain'
-import { PageLayout } from '@web/layouts/Page.layout'
-import { useAuthentication } from '@web/modules/authentication'
+} from '@ant-design/icons';
+import { Api, Model } from '@web/domain';
+import { PageLayout } from '@web/layouts/Page.layout';
+import { useAuthentication } from '@web/modules/authentication';
 import {
   Avatar,
   Button,
@@ -21,12 +23,13 @@ import {
   Spin,
   Tabs,
   Typography,
-} from 'antd'
-import dayjs from 'dayjs'
-import { useParams, useRouter } from 'next/navigation'
-import { useSnackbar } from 'notistack'
-import { useEffect, useState } from 'react'
-import { io } from 'socket.io-client'
+} from 'antd';
+import dayjs from 'dayjs';
+import { useParams, useRouter } from 'next/navigation';
+import { useSnackbar } from 'notistack';
+import { useEffect, useState } from 'react';
+import { io } from 'socket.io-client';
+
 const { Title, Text, Paragraph } = Typography
 const { TabPane } = Tabs
 
