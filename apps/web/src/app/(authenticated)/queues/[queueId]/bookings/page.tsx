@@ -1,27 +1,26 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import {
-  Typography,
-  Form,
-  Input,
-  Button,
-  DatePicker,
-  TimePicker,
-  Select,
-  Row,
-  Col,
-  Spin,
-} from 'antd'
 import { CheckCircleOutlined } from '@ant-design/icons'
-const { Title, Text } = Typography
-const { Option } = Select
-import { useAuthentication } from '@web/modules/authentication'
-import dayjs from 'dayjs'
-import { useSnackbar } from 'notistack'
-import { useRouter, useParams } from 'next/navigation'
 import { Api, Model } from '@web/domain'
 import { PageLayout } from '@web/layouts/Page.layout'
+import { useAuthentication } from '@web/modules/authentication'
+import {
+  Button,
+  Col,
+  DatePicker,
+  Form,
+  Row,
+  Select,
+  Spin,
+  TimePicker,
+  Typography
+} from 'antd'
+import dayjs from 'dayjs'
+import { useParams, useRouter } from 'next/navigation'
+import { useSnackbar } from 'notistack'
+import { useEffect, useState } from 'react'
+const { Title, Text } = Typography
+const { Option } = Select
 
 export default function BookingsPage() {
   const router = useRouter()
@@ -65,7 +64,7 @@ export default function BookingsPage() {
         .toISOString()
       await Api.Booking.createOneByUserId(userId, {
         bookingTime,
-        service: values.service,
+        serviceId: values.service,
         status: 'confirmed',
         queueId: params.queueId,
       })
@@ -126,7 +125,7 @@ export default function BookingsPage() {
             >
               <Select placeholder="Select a service">
                 {services.map(service => (
-                  <Option key={service.id} value={service.serviceName}>
+                  <Option key={service.id} value={service.id}>
                     {service.serviceName}
                   </Option>
                 ))}
