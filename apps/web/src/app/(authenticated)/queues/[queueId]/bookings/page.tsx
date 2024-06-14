@@ -38,15 +38,14 @@ export default function BookingsPage() {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const queues = await Api.Queue.findMany({
-          filters: { id: params.queueId },
-          includes: ['services'],
+        const services = await Api.Service.findManyByQueueId(params.queueId, {
+          includes: ['queue'],
         })
-        if (queues.length > 0) {
-          const queue = queues[0]
-          setServices(queue.services || [])
-          setQueueName(queue.name)
-          setLocation(queue.location)
+        if (services.length > 0) {
+          const queue = services[0].queue
+          setServices(services)
+          setQueueName(queue?.name || '')
+          setLocation(queue?.location || '')
         }
       } catch (error) {
         enqueueSnackbar('Failed to fetch services', { variant: 'error' })
