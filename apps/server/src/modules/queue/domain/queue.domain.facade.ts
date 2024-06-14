@@ -16,10 +16,16 @@ export class QueueDomainFacade {
   ) {}
 
   async create(values: Partial<Queue>): Promise<Queue> {
+    if (values.averageTime) {
+      values.averageTime = values.averageTime.toString();
+    }
     return this.repository.save(values)
   }
 
   async update(item: Queue, values: Partial<Queue>): Promise<Queue> {
+    if (values.averageTime) {
+      values.averageTime = values.averageTime.toString();
+    }
     const itemUpdated = { ...item, ...values }
 
     return this.repository.save(itemUpdated)

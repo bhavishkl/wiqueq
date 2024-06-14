@@ -77,6 +77,9 @@ export class Queue {
   @OneToMany(() => Service, child => child.queue)
   services?: Service[]
 
+  @Column({ nullable: true })
+  averageTime?: string
+
   @CreateDateColumn()
   dateCreated: string
 

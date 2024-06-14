@@ -12,6 +12,10 @@ export class QueueCreateDto {
   name: string
 
   @IsString()
+  @IsNotEmpty()
+  averageTime: string
+
+  @IsString()
   @IsOptional()
   logoUrl?: string
 
@@ -64,6 +68,10 @@ export class QueueUpdateDto {
   @IsString()
   @IsOptional()
   name?: string
+
+  @IsString()
+  @IsOptional()
+  averageTime?: string
 
   @IsString()
   @IsOptional()

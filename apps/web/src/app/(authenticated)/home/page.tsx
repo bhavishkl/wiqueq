@@ -42,12 +42,13 @@ export default function HomePage() {
   const [favorites, setFavorites] = useState<string[]>([])
   const [participants, setParticipants] = useState<string[]>([])
   const [participantsCount, setParticipantsCount] = useState<{ [key: string]: number }>({})
+  const [averageWaitTime, setAverageWaitTime] = useState<number>(5)
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
       try {
-        const [queuesData, categoriesData, favoritesData, participantsData] =
+        const [queuesData, categoriesData, favoritesData, participantsData, averageWaitTimeData] =
           await Promise.all([
             Api.Queue.findMany({
               includes: ['reviews', 'participants', 'favorites'],
@@ -55,12 +56,14 @@ export default function HomePage() {
             Api.QueueCategory.findMany(),
             Api.Favorite.findManyByUserId(userId),
             Api.Participant.findManyByUserId(userId),
+            Api.Queue.getAverageWaitTime() // Assuming this is the correct API call to get the average wait time
           ])
         setQueues(queuesData)
         setCategories(categoriesData)
         setFavorites(favoritesData.map(fav => fav.queueId))
         setParticipants(participantsData.map(part => part.queueId))
-        
+        setAverageWaitTime(averageWaitTimeData)
+
         const participantsCountData: { [key: string]: number } = {}
         queuesData.forEach(queue => {
           participantsCountData[queue.id] = queue.participants?.length || 0
@@ -211,7 +214,7 @@ export default function HomePage() {
                   <Row gutter={16}>
                     <Col span={12}>
                       <Text>
-                        Estimated Wait Time: {queue.participants?.length * 5}{' '}
+                        Estimated Wait Time: {queue.participants?.length * averageWaitTime}{' '}
                         mins
                       </Text>
                     </Col>
