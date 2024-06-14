@@ -229,7 +229,7 @@ export default function QueueDetailsPage() {
                   <List.Item.Meta
                     avatar={<Avatar src={participant.user?.pictureUrl} />}
                     title={participant.user?.name}
-                    description={`Position: ${index + 1}, Estimated Wait Time: ${calculateEstimatedWaitTime(index)}`}
+                    description={`Position: ${index + 1}, your turn at: ${calculateEstimatedWaitTime(index)}`}
                   />
                 </List.Item>
               )}
