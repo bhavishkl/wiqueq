@@ -1,6 +1,6 @@
-'use client'
-
 import {
+  ClockCircleOutlined,
+  EnvironmentOutlined,
   LoadingOutlined,
   MailOutlined,
   PhoneOutlined,
@@ -163,16 +163,15 @@ export default function QueueDetailsPage() {
     <PageLayout layout="narrow">
       <Title level={2}>{queue?.name}</Title>
       <Avatar src={queue?.logoUrl} size={64} icon={<UserOutlined />} />
-      <Paragraph>{queue?.description}</Paragraph>
       <Paragraph>
         <MailOutlined /> {queue?.contactEmail} <br />
         <PhoneOutlined /> {queue?.contactPhone}
       </Paragraph>
       <Paragraph>
-        <strong>Operating Hours:</strong> {queue?.operatingHours}
+        <ClockCircleOutlined /> <strong>Operating Hours:</strong> {queue?.operatingHours}
       </Paragraph>
       <Paragraph>
-        <strong>Address:</strong> {queue?.location}
+        <EnvironmentOutlined /> <strong>Address:</strong> {queue?.location}
       </Paragraph>
       <Paragraph>
         <StarFilled />{' '}
@@ -194,22 +193,24 @@ export default function QueueDetailsPage() {
               </Paragraph>
             </>
           )}
-          <List
-            header={<div>Reviews</div>}
-            dataSource={reviews.slice(0, 3)}
-            renderItem={review => (
-              <List.Item>
-                <List.Item.Meta
-                  avatar={<Avatar src={review.user?.pictureUrl} />}
-                  title={review.user?.name}
-                  description={review.reviewText}
-                />
-                <div>
-                  {review.rating} <StarFilled />
-                </div>
-              </List.Item>
-            )}
-          />
+          {reviews.length > 0 ? (
+            <List
+              header={<div>Reviews</div>}
+              dataSource={reviews.slice(0, 3)}
+              renderItem={review => (
+                <List.Item>
+                  <List.Item.Meta
+                    avatar={<Avatar src={review.user?.pictureUrl} />}
+                    title={review.user?.name}
+                    description={review.reviewText}
+                  />
+                  <div>
+                    {review.rating} <StarFilled />
+                  </div>
+                </List.Item>
+              )}
+            />
+          ) : null}
           <Button onClick={() => setIsReviewModalVisible(true)}>
             Leave a Review
           </Button>
@@ -234,21 +235,23 @@ export default function QueueDetailsPage() {
           </TabPane>
         )}
       </Tabs>
-      <Button
-        type="primary"
-        onClick={() => router.push(`/queues/${queueId}/bookings`)}
-      >
-        Book Slot
-      </Button>
-      {isInQueue ? (
-        <Button type="default" onClick={handleLeaveQueue}>
-          Leave Queue
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16 }}>
+        <Button
+          type="primary"
+          onClick={() => router.push(`/queues/${queueId}/bookings`)}
+        >
+          Book Slot
         </Button>
-      ) : (
-        <Button type="primary" onClick={handleJoinQueue}>
-          Join Queue
-        </Button>
-      )}
+        {isInQueue ? (
+          <Button type="default" onClick={handleLeaveQueue}>
+            Leave Queue
+          </Button>
+        ) : (
+          <Button type="primary" onClick={handleJoinQueue}>
+            Join Queue
+          </Button>
+        )}
+      </div>
       <Modal
         title="Leave a Review"
         visible={isReviewModalVisible}
