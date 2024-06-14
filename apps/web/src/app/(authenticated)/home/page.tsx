@@ -125,7 +125,7 @@ export default function HomePage() {
     }
   }
 
-  const handleLeaveQueue = async () => {
+  const handleLeaveQueue = async (id: string) => {
     if (!currentQueue) return
 
     setLoading(true)

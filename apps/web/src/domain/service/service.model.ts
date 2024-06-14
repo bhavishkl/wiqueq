@@ -1,3 +1,5 @@
+// apps/web/src/domain/service/service.model.ts
+
 import { Queue } from '../queue'
 
 export class Service {
