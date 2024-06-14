@@ -1,9 +1,9 @@
-'use client'
+"use client";
 
-import { StarFilled, StarOutlined } from '@ant-design/icons'
-import { Api, Model } from '@web/domain'
-import { PageLayout } from '@web/layouts/Page.layout'
-import { useAuthentication } from '@web/modules/authentication'
+import { StarFilled, StarOutlined } from '@ant-design/icons';
+import { Api, Model } from '@web/domain';
+import { PageLayout } from '@web/layouts/Page.layout';
+import { useAuthentication } from '@web/modules/authentication';
 import {
   Button,
   Card,
@@ -16,10 +16,11 @@ import {
   Space,
   Spin,
   Typography,
-} from 'antd'
-import { useParams, useRouter } from 'next/navigation'
-import { useSnackbar } from 'notistack'
-import { useEffect, useState } from 'react'
+} from 'antd';
+import { useParams, useRouter } from 'next/navigation';
+import { useSnackbar } from 'notistack';
+import { useEffect, useState } from 'react';
+
 const { Title, Text } = Typography
 const { Search } = Input
 const { Option } = Select
@@ -39,6 +40,7 @@ export default function HomePage() {
   const [favorites, setFavorites] = useState<string[]>([])
   const [participants, setParticipants] = useState<string[]>([])
   const [participantsCount, setParticipantsCount] = useState<{ [key: string]: number }>({})
+  const [currentQueue, setCurrentQueue] = useState<Model.Queue | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -57,6 +59,12 @@ export default function HomePage() {
         setCategories(categoriesData)
         setFavorites(favoritesData.map(fav => fav.queueId))
         setParticipants(participantsData.map(part => part.queueId))
+
+        const userParticipant = participantsData.find(part => part.userId === userId)
+        if (userParticipant) {
+          const currentQueueData = queuesData.find(queue => queue.id === userParticipant.queueId)
+          setCurrentQueue(currentQueueData || null)
+        }
 
         const participantsCountData: { [key: string]: number } = {}
         queuesData.forEach(queue => {
@@ -81,9 +89,16 @@ export default function HomePage() {
   }
 
   const handleJoinQueue = async (queueId: string) => {
+    if (currentQueue) {
+      enqueueSnackbar('You are already in a queue. Please leave the current queue before joining another.', { variant: 'warning' })
+      return
+    }
+
     setLoading(true)
     try {
       await Api.Participant.createOneByQueueId(queueId, { userId })
+      const joinedQueue = queues.find(queue => queue.id === queueId)
+      setCurrentQueue(joinedQueue || null)
       setParticipants([...participants, queueId])
       setParticipantsCount(prev => ({
         ...prev,
@@ -98,22 +113,25 @@ export default function HomePage() {
     }
   }
 
-  const handleLeaveQueue = async (queueId: string) => {
+  const handleLeaveQueue = async (id: string) => {
+    if (!currentQueue) return
+
     setLoading(true)
     try {
       const participant = await Api.Participant.findManyByUserId(userId, {
         includes: ['queue'],
       })
       const participantToLeave = participant.find(
-        part => part.queueId === queueId,
+        part => part.queueId === currentQueue.id,
       )
       if (participantToLeave) {
         await Api.Participant.deleteOne(participantToLeave.id)
-        setParticipants(participants.filter(id => id !== queueId))
+        setParticipants(participants.filter(id => id !== currentQueue.id))
         setParticipantsCount(prev => ({
           ...prev,
-          [queueId]: (prev[queueId] || 0) - 1
+          [currentQueue.id]: (prev[currentQueue.id] || 0) - 1
         }))
+        setCurrentQueue(null)
         enqueueSnackbar('Left queue successfully', { variant: 'success' })
       }
     } catch (error) {
@@ -214,7 +232,7 @@ export default function HomePage() {
                 >
                   <Row gutter={16}>
                     <Col span={12}>
-                    <Text>
+                      <Text>
                         Estimated Wait Time: {calculateEstimatedWaitTime(queue.averageTime, participantsCount[queue.id])} mins
                       </Text>
                     </Col>
@@ -279,6 +297,15 @@ export default function HomePage() {
           />
         )}
       </Space>
+      {currentQueue && (
+        <div style={{ position: 'fixed', right: 0, top: '50%', transform: 'translateY(-50%)', backgroundColor: '#fff', padding: '16px', boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)' }}>
+          <Title level={4}>Current Queue</Title>
+          <Text>{currentQueue.name}</Text>
+          <Button type="primary" danger onClick={handleLeaveQueue}>
+            Leave Queue
+          </Button>
+        </div>
+      )}
     </PageLayout>
   )
 }
