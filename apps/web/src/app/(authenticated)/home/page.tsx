@@ -18,9 +18,10 @@ import {
   Spin,
   Typography,
 } from 'antd';
+import debounce from 'lodash/debounce';
 import { useParams, useRouter } from 'next/navigation';
 import { useSnackbar } from 'notistack';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 const { Title, Text } = Typography
 const { Search } = Input
@@ -86,6 +87,9 @@ export default function HomePage() {
   const handleSearch = (value: string) => {
     setSearchTerm(value)
   }
+
+  // Debounced version of handleSearch
+  const debouncedHandleSearch = useCallback(debounce(handleSearch, 300), [])
 
   const handleCategoryChange = (value: string) => {
     setSelectedCategory(value)
@@ -204,7 +208,7 @@ export default function HomePage() {
       <Space direction="vertical" style={{ width: '100%' }}>
         <Search
           placeholder="Search queues"
-          onSearch={handleSearch}
+          onChange={(e) => debouncedHandleSearch(e.target.value)}
           enterButton
         />
         <Select
