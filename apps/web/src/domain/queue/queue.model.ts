@@ -50,4 +50,8 @@ export class Queue {
   reviews?: Review[]
 
   services?: Service[]
+
+  averageTime?: string // Added missing property
+  
+  operatingDays?: string[] // Added missing property
 }

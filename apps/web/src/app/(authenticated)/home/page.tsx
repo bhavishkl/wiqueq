@@ -1,29 +1,28 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { StarFilled, StarOutlined } from '@ant-design/icons'
+import { Api, Model } from '@web/domain'
+import { PageLayout } from '@web/layouts/Page.layout'
+import { useAuthentication } from '@web/modules/authentication'
 import {
-  Typography,
-  Input,
-  Select,
-  List,
   Button,
-  Spin,
-  Space,
-  Row,
-  Col,
   Card,
+  Col,
+  Input,
+  List,
   Rate,
+  Row,
+  Select,
+  Space,
+  Spin,
+  Typography,
 } from 'antd'
-import { StarOutlined, StarFilled } from '@ant-design/icons'
+import { useParams, useRouter } from 'next/navigation'
+import { useSnackbar } from 'notistack'
+import { useEffect, useState } from 'react'
 const { Title, Text } = Typography
 const { Search } = Input
 const { Option } = Select
-import { useAuthentication } from '@web/modules/authentication'
-import dayjs from 'dayjs'
-import { useSnackbar } from 'notistack'
-import { useRouter, useParams } from 'next/navigation'
-import { Api, Model } from '@web/domain'
-import { PageLayout } from '@web/layouts/Page.layout'
 
 export default function HomePage() {
   const router = useRouter()
@@ -35,9 +34,7 @@ export default function HomePage() {
   const [queues, setQueues] = useState<Model.Queue[]>([])
   const [categories, setCategories] = useState<Model.QueueCategory[]>([])
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(
-    undefined,
-  )
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined)
   const [loading, setLoading] = useState(false)
   const [favorites, setFavorites] = useState<string[]>([])
   const [participants, setParticipants] = useState<string[]>([])
@@ -163,6 +160,13 @@ export default function HomePage() {
     return category ? category.name : 'Unknown Category'
   }
 
+  const calculateEstimatedWaitTime = (averageTime: string | undefined, participantsCount: number) => {
+    if (!averageTime) return 'N/A'
+    const [hours, minutes] = averageTime.split(':').map(Number)
+    const totalMinutes = (hours * 60) + minutes
+    return totalMinutes * participantsCount
+  }
+
   return (
     <PageLayout layout="narrow">
       <Title level={2}>Virtual Queues</Title>
@@ -210,9 +214,8 @@ export default function HomePage() {
                 >
                   <Row gutter={16}>
                     <Col span={12}>
-                      <Text>
-                        Estimated Wait Time: {queue.participants?.length * 5}{' '}
-                        mins
+                    <Text>
+                        Estimated Wait Time: {calculateEstimatedWaitTime(queue.averageTime, participantsCount[queue.id])} mins
                       </Text>
                     </Col>
                     <Col span={12}>
