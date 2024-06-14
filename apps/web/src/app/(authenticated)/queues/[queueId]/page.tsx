@@ -1,5 +1,3 @@
-"use client"
-
 import {
   ClockCircleOutlined,
   EnvironmentOutlined,
@@ -152,12 +150,11 @@ export default function QueueDetailsPage() {
     )
   }
 
-  const calculateEstimatedWaitTime = () => {
-    const participantIndex = participants.findIndex(p => p.userId === userId)
-    if (participantIndex === -1 || !queue?.averageTime) return 'N/A'
+  const calculateEstimatedWaitTime = (index: number) => {
+    if (!queue?.averageTime) return 'N/A'
     const [hours, minutes] = queue.averageTime.split(':').map(Number)
     const totalMinutes = (hours * 60) + minutes
-    const estimatedWaitTime = dayjs().add(totalMinutes * participantIndex, 'minute')
+    const estimatedWaitTime = dayjs().add(totalMinutes * index, 'minute')
     return estimatedWaitTime.format('HH:mm')
   }
 
@@ -191,7 +188,7 @@ export default function QueueDetailsPage() {
                 Your position: {participants.find(p => p.userId === userId)?.position || 'N/A'}
               </Paragraph>
               <Paragraph>
-                Estimated wait time: {calculateEstimatedWaitTime()}
+                Estimated wait time: {calculateEstimatedWaitTime(participants.findIndex(p => p.userId === userId))}
               </Paragraph>
             </>
           )}
@@ -224,12 +221,12 @@ export default function QueueDetailsPage() {
           <TabPane tab="Queue Participants" key="2">
             <List
               dataSource={participants}
-              renderItem={participant => (
+              renderItem={(participant, index) => (
                 <List.Item>
                   <List.Item.Meta
                     avatar={<Avatar src={participant.user?.pictureUrl} />}
                     title={participant.user?.name}
-                    description={`Position: ${participants.indexOf(participant) + 1}`}
+                    description={`Position: ${index + 1}, Estimated Wait Time: ${calculateEstimatedWaitTime(index)}`}
                   />
                 </List.Item>
               )}
