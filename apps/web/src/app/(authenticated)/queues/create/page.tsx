@@ -1,31 +1,29 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import {
-  Typography,
-  Form,
-  Input,
-  Button,
-  Upload,
-  Select,
-  Row,
-  Col,
-  TimePicker,
-  Checkbox,
-} from 'antd'
 import { UploadOutlined } from '@ant-design/icons'
-const { Title, Text, Paragraph } = Typography
-const { Option } = Select
-import { useAuthentication } from '@web/modules/authentication'
-import dayjs from 'dayjs'
-import { useSnackbar } from 'notistack'
-import { useRouter, useParams } from 'next/navigation'
 import { Api, Model } from '@web/domain'
 import { PageLayout } from '@web/layouts/Page.layout'
+import { useAuthentication } from '@web/modules/authentication'
+import {
+  Button,
+  Col,
+  Form,
+  Input,
+  Row,
+  Select,
+  TimePicker,
+  Typography,
+  Upload,
+} from 'antd'
+import { useRouter } from 'next/navigation'
+import { useSnackbar } from 'notistack'
+import { useEffect, useState } from 'react'
+
+const { Title, Paragraph } = Typography
+const { Option } = Select
 
 export default function CreateQueuePage() {
   const router = useRouter()
-  const params = useParams<any>()
   const authentication = useAuthentication()
   const userId = authentication.user?.id
   const { enqueueSnackbar } = useSnackbar()
@@ -48,7 +46,7 @@ export default function CreateQueuePage() {
     }
 
     fetchCategories()
-  }, [])
+  }, [enqueueSnackbar])
 
   const handleUpload = async (options: any) => {
     const { file } = options
