@@ -10,6 +10,7 @@ import {
   Col,
   Input,
   List,
+  Modal,
   Rate,
   Row,
   Select,
@@ -41,6 +42,8 @@ export default function HomePage() {
   const [participants, setParticipants] = useState<string[]>([])
   const [participantsCount, setParticipantsCount] = useState<{ [key: string]: number }>({})
   const [currentQueue, setCurrentQueue] = useState<Model.Queue | null>(null)
+  const [showLeaveQueueModal, setShowLeaveQueueModal] = useState(false)
+  const [pendingQueueId, setPendingQueueId] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -90,10 +93,15 @@ export default function HomePage() {
 
   const handleJoinQueue = async (queueId: string) => {
     if (currentQueue) {
-      enqueueSnackbar('You are already in a queue. Please leave the current queue before joining another.', { variant: 'warning' })
+      setPendingQueueId(queueId)
+      setShowLeaveQueueModal(true)
       return
     }
 
+    joinQueue(queueId)
+  }
+
+  const joinQueue = async (queueId: string) => {
     setLoading(true)
     try {
       await Api.Participant.createOneByQueueId(queueId, { userId })
@@ -113,7 +121,7 @@ export default function HomePage() {
     }
   }
 
-  const handleLeaveQueue = async (id: string) => {
+  const handleLeaveQueue = async () => {
     if (!currentQueue) return
 
     setLoading(true)
@@ -133,6 +141,10 @@ export default function HomePage() {
         }))
         setCurrentQueue(null)
         enqueueSnackbar('Left queue successfully', { variant: 'success' })
+        if (pendingQueueId) {
+          joinQueue(pendingQueueId)
+          setPendingQueueId(null)
+        }
       }
     } catch (error) {
       enqueueSnackbar('Failed to leave queue', { variant: 'error' })
@@ -297,15 +309,16 @@ export default function HomePage() {
           />
         )}
       </Space>
-      {currentQueue && (
-        <div style={{ position: 'fixed', right: 0, top: '50%', transform: 'translateY(-50%)', backgroundColor: '#fff', padding: '16px', boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)' }}>
-          <Title level={4}>Current Queue</Title>
-          <Text>{currentQueue.name}</Text>
-          <Button type="primary" danger onClick={handleLeaveQueue}>
-            Leave Queue
-          </Button>
-        </div>
-      )}
+      <Modal
+        visible={showLeaveQueueModal}
+        onCancel={() => setShowLeaveQueueModal(false)}
+        onOk={handleLeaveQueue}
+        title="Leave Current Queue"
+        okText="Leave Queue"
+        cancelText="Cancel"
+      >
+        <p>You are already in a queue. Do you want to leave the current queue to join another one?</p>
+      </Modal>
     </PageLayout>
   )
 }
