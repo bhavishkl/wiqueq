@@ -150,6 +150,15 @@ export default function QueueDetailsPage() {
     )
   }
 
+  const calculateEstimatedWaitTime = () => {
+    const participantIndex = participants.findIndex(p => p.userId === userId)
+    if (participantIndex === -1 || !queue?.averageTime) return 'N/A'
+    const [hours, minutes] = queue.averageTime.split(':').map(Number)
+    const totalMinutes = (hours * 60) + minutes
+    const estimatedWaitTime = dayjs().add(totalMinutes * participantIndex, 'minute')
+    return estimatedWaitTime.format('HH:mm')
+  }
+
   return (
     <PageLayout layout="narrow">
       <Title level={2}>{queue?.name}</Title>
@@ -181,10 +190,7 @@ export default function QueueDetailsPage() {
                 Your position: {participants.find(p => p.userId === userId)?.position || 'N/A'}
               </Paragraph>
               <Paragraph>
-                Estimated wait time:{' '}
-                {dayjs()
-                  .add(participants.find(p => p.userId === userId)?.position || 0, 'minute')
-                  .format('HH:mm')}
+                Estimated wait time: {calculateEstimatedWaitTime()}
               </Paragraph>
             </>
           )}

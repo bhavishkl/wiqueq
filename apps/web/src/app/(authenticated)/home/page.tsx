@@ -1,278 +1,284 @@
 'use client'
 
-import {
-  LoadingOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  StarFilled,
-  UserOutlined,
-} from '@ant-design/icons'
+import { StarFilled, StarOutlined } from '@ant-design/icons'
 import { Api, Model } from '@web/domain'
 import { PageLayout } from '@web/layouts/Page.layout'
 import { useAuthentication } from '@web/modules/authentication'
 import {
-  Avatar,
   Button,
-  Form,
+  Card,
+  Col,
   Input,
   List,
-  Modal,
   Rate,
+  Row,
+  Select,
+  Space,
   Spin,
-  Tabs,
   Typography,
 } from 'antd'
-import dayjs from 'dayjs'
 import { useParams, useRouter } from 'next/navigation'
 import { useSnackbar } from 'notistack'
 import { useEffect, useState } from 'react'
-import { io } from 'socket.io-client'
-const { Title, Text, Paragraph } = Typography
-const { TabPane } = Tabs
+const { Title, Text } = Typography
+const { Search } = Input
+const { Option } = Select
 
-export default function QueueDetailsPage() {
+export default function HomePage() {
   const router = useRouter()
   const params = useParams<any>()
   const authentication = useAuthentication()
   const userId = authentication.user?.id
   const { enqueueSnackbar } = useSnackbar()
 
-  const [queue, setQueue] = useState<Model.Queue | null>(null)
-  const [participants, setParticipants] = useState<Model.Participant[]>([])
-  const [reviews, setReviews] = useState<Model.Review[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [isInQueue, setIsInQueue] = useState(false)
-  const [isReviewModalVisible, setIsReviewModalVisible] = useState(false)
-
-  const queueId = params.queueId
+  const [queues, setQueues] = useState<Model.Queue[]>([])
+  const [categories, setCategories] = useState<Model.QueueCategory[]>([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined)
+  const [loading, setLoading] = useState(false)
+  const [favorites, setFavorites] = useState<string[]>([])
+  const [participants, setParticipants] = useState<string[]>([])
+  const [participantsCount, setParticipantsCount] = useState<{ [key: string]: number }>({})
 
   useEffect(() => {
-    const fetchQueueDetails = async () => {
+    const fetchData = async () => {
+      setLoading(true)
       try {
-        const queueData = await Api.Queue.findOne(queueId, {
-          includes: ['participants.user', 'reviews.user'],
+        const [queuesData, categoriesData, favoritesData, participantsData] =
+          await Promise.all([
+            Api.Queue.findMany({
+              includes: ['reviews', 'participants', 'favorites'],
+            }),
+            Api.QueueCategory.findMany(),
+            Api.Favorite.findManyByUserId(userId),
+            Api.Participant.findManyByUserId(userId),
+          ])
+        setQueues(queuesData)
+        setCategories(categoriesData)
+        setFavorites(favoritesData.map(fav => fav.queueId))
+        setParticipants(participantsData.map(part => part.queueId))
+
+        const participantsCountData: { [key: string]: number } = {}
+        queuesData.forEach(queue => {
+          participantsCountData[queue.id] = queue.participants?.length || 0
         })
-        setQueue(queueData)
-        const sortedParticipants = (queueData.participants || []).sort(
-          (a, b) => new Date(a.joinTime).getTime() - new Date(b.joinTime).getTime()
-        )
-        setParticipants(sortedParticipants)
-        setReviews(queueData.reviews || [])
-        setIsInQueue(
-          queueData.participants?.some(
-            participant => participant.userId === userId,
-          ) || false,
-        )
+        setParticipantsCount(participantsCountData)
       } catch (error) {
-        enqueueSnackbar('Failed to load queue details', { variant: 'error' })
+        enqueueSnackbar('Failed to load data', { variant: 'error' })
       } finally {
-        setIsLoading(false)
+        setLoading(false)
       }
     }
+    fetchData()
+  }, [userId])
 
-    fetchQueueDetails()
-  }, [queueId, userId])
+  const handleSearch = (value: string) => {
+    setSearchTerm(value)
+  }
 
-  useEffect(() => {
-    const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || '')
+  const handleCategoryChange = (value: string) => {
+    setSelectedCategory(value)
+  }
 
-    socket.on('participantJoined', (newParticipant: Model.Participant) => {
-      setParticipants(prevParticipants => [...prevParticipants, newParticipant])
-    })
-
-    socket.on('participantLeft', (leftParticipant: Model.Participant) => {
-      setParticipants(prevParticipants =>
-        prevParticipants.filter(participant => participant.id !== leftParticipant.id)
-      )
-    })
-
-    return () => {
-      socket.disconnect()
-    }
-  }, [])
-
-  const handleJoinQueue = async () => {
-    setIsLoading(true)
+  const handleJoinQueue = async (queueId: string) => {
+    setLoading(true)
     try {
       await Api.Participant.createOneByQueueId(queueId, { userId })
-      const updatedParticipants = await Api.Participant.findManyByQueueId(queueId)
-      setParticipants(updatedParticipants)
-      setIsInQueue(true)
-      enqueueSnackbar('Successfully joined the queue', { variant: 'success' })
+      setParticipants([...participants, queueId])
+      setParticipantsCount(prev => ({
+        ...prev,
+        [queueId]: (prev[queueId] || 0) + 1
+      }))
+      enqueueSnackbar('Joined queue successfully', { variant: 'success' })
+      router.push(`/queues/${queueId}`)
     } catch (error) {
-      enqueueSnackbar('Failed to join the queue', { variant: 'error' })
+      enqueueSnackbar('Failed to join queue', { variant: 'error' })
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
-  const handleLeaveQueue = async () => {
-    setIsLoading(true)
+  const handleLeaveQueue = async (queueId: string) => {
+    setLoading(true)
     try {
-      const participant = participants.find(
-        participant => participant.userId === userId,
+      const participant = await Api.Participant.findManyByUserId(userId, {
+        includes: ['queue'],
+      })
+      const participantToLeave = participant.find(
+        part => part.queueId === queueId,
       )
-      if (participant) {
-        await Api.Participant.deleteOne(participant.id)
-        const updatedParticipants = await Api.Participant.findManyByQueueId(queueId)
-        setParticipants(updatedParticipants)
-        setIsInQueue(false)
-        enqueueSnackbar('Successfully left the queue', { variant: 'success' })
+      if (participantToLeave) {
+        await Api.Participant.deleteOne(participantToLeave.id)
+        setParticipants(participants.filter(id => id !== queueId))
+        setParticipantsCount(prev => ({
+          ...prev,
+          [queueId]: (prev[queueId] || 0) - 1
+        }))
+        enqueueSnackbar('Left queue successfully', { variant: 'success' })
       }
     } catch (error) {
-      enqueueSnackbar('Failed to leave the queue', { variant: 'error' })
+      enqueueSnackbar('Failed to leave queue', { variant: 'error' })
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
-  const handleReviewSubmit = async (values: {
-    rating: number
-    reviewText: string
-  }) => {
-    setIsLoading(true)
+  const handleFavoriteToggle = async (queueId: string) => {
+    setLoading(true)
     try {
-      await Api.Review.createOneByQueueId(queueId, { ...values, userId })
-      enqueueSnackbar('Review submitted successfully', { variant: 'success' })
-      setIsReviewModalVisible(false)
+      if (favorites.includes(queueId)) {
+        const favorite = await Api.Favorite.findManyByUserId(userId, {
+          includes: ['queue'],
+        })
+        const favoriteToDelete = favorite.find(fav => fav.queueId === queueId)
+        if (favoriteToDelete) {
+          await Api.Favorite.deleteOne(favoriteToDelete.id)
+          setFavorites(favorites.filter(id => id !== queueId))
+          enqueueSnackbar('Removed from favorites', { variant: 'success' })
+        }
+      } else {
+        await Api.Favorite.createOneByQueueId(queueId, { userId })
+        setFavorites([...favorites, queueId])
+        enqueueSnackbar('Added to favorites', { variant: 'success' })
+      }
     } catch (error) {
-      enqueueSnackbar('Failed to submit review', { variant: 'error' })
+      enqueueSnackbar('Failed to update favorites', { variant: 'error' })
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
-  if (isLoading) {
+  const filteredQueues = queues.filter(queue => {
     return (
-      <PageLayout layout="narrow">
-        <Spin indicator={<LoadingOutlined style={{ fontSize: 24 }} spin />} />
-      </PageLayout>
+      queue.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      (!selectedCategory || queue.category === selectedCategory)
     )
+  })
+
+  const getCategoryName = (categoryId: string) => {
+    const category = categories.find(cat => cat.id === categoryId)
+    return category ? category.name : 'Unknown Category'
   }
 
-  const calculateEstimatedWaitTime = () => {
-    const participantIndex = participants.findIndex(p => p.userId === userId)
-    if (participantIndex === -1 || !queue?.averageTime) return 'N/A'
-    const [hours, minutes] = queue.averageTime.split(':').map(Number)
+  const calculateEstimatedWaitTime = (averageTime: string | undefined, participantsCount: number) => {
+    if (!averageTime) return 'N/A'
+    const [hours, minutes] = averageTime.split(':').map(Number)
     const totalMinutes = (hours * 60) + minutes
-    const estimatedWaitTime = dayjs().add(totalMinutes * participantIndex, 'minute')
-    return estimatedWaitTime.format('HH:mm')
+    return totalMinutes * participantsCount
   }
 
   return (
     <PageLayout layout="narrow">
-      <Title level={2}>{queue?.name}</Title>
-      <Avatar src={queue?.logoUrl} size={64} icon={<UserOutlined />} />
-      <Paragraph>{queue?.description}</Paragraph>
-      <Paragraph>
-        <MailOutlined /> {queue?.contactEmail} <br />
-        <PhoneOutlined /> {queue?.contactPhone}
-      </Paragraph>
-      <Paragraph>
-        <strong>Operating Hours:</strong> {queue?.operatingHours}
-      </Paragraph>
-      <Paragraph>
-        <strong>Address:</strong> {queue?.location}
-      </Paragraph>
-      <Paragraph>
-        <StarFilled />{' '}
-        {queue?.reviews?.reduce(
-          (acc, review) => acc + (review.rating || 0),
-          0,
-        ) / (queue?.reviews?.length || 1)}{' '}
-        ({queue?.reviews?.length} reviews)
-      </Paragraph>
-      <Tabs defaultActiveKey="1">
-        <TabPane tab="Details" key="1">
-          {isInQueue && (
-            <>
-              <Paragraph>
-                Your position: {participants.find(p => p.userId === userId)?.position || 'N/A'}
-              </Paragraph>
-              <Paragraph>
-                Estimated wait time: {calculateEstimatedWaitTime()}
-              </Paragraph>
-            </>
-          )}
+      <Title level={2}>Virtual Queues</Title>
+      <Text>Choose a queue to join or add to your favorites</Text>
+      <Space direction="vertical" style={{ width: '100%' }}>
+        <Search
+          placeholder="Search queues"
+          onSearch={handleSearch}
+          enterButton
+        />
+        <Select
+          placeholder="Filter by category"
+          onChange={handleCategoryChange}
+          allowClear
+          style={{ width: '100%' }}
+        >
+          {categories.map(category => (
+            <Option key={category.id} value={category.id}>
+              {category.name}
+            </Option>
+          ))}
+        </Select>
+        {loading ? (
+          <Spin tip="Loading..." />
+        ) : (
           <List
-            header={<div>Reviews</div>}
-            dataSource={reviews.slice(0, 3)}
-            renderItem={review => (
+            grid={{ gutter: 16, column: 2 }}
+            dataSource={filteredQueues}
+            renderItem={queue => (
               <List.Item>
-                <List.Item.Meta
-                  avatar={<Avatar src={review.user?.pictureUrl} />}
-                  title={review.user?.name}
-                  description={review.reviewText}
-                />
-                <div>
-                  {review.rating} <StarFilled />
-                </div>
+                <Card
+                  title={queue.name}
+                  extra={
+                    <Rate
+                      disabled
+                      defaultValue={
+                        queue.reviews?.reduce(
+                          (acc, review) => acc + review.rating,
+                          0,
+                        ) / queue.reviews?.length || 0
+                      }
+                    />
+                  }
+                  style={{ width: '100%' }}
+                >
+                  <Row gutter={16}>
+                    <Col span={12}>
+                    <Text>
+                        Estimated Wait Time: {calculateEstimatedWaitTime(queue.averageTime, participantsCount[queue.id])} mins
+                      </Text>
+                    </Col>
+                    <Col span={12}>
+                      <Text>Participants: {participantsCount[queue.id]}</Text>
+                    </Col>
+                  </Row>
+                  <Row gutter={16} style={{ marginTop: '10px' }}>
+                    <Col span={12}>
+                      {participants.includes(queue.id) ? (
+                        <Button
+                          type="primary"
+                          danger
+                          onClick={() => handleLeaveQueue(queue.id)}
+                        >
+                          Leave Queue
+                        </Button>
+                      ) : (
+                        <Button
+                          type="primary"
+                          onClick={() => handleJoinQueue(queue.id)}
+                        >
+                          Join Queue
+                        </Button>
+                      )}
+                    </Col>
+                    <Col span={12}>
+                      <Button
+                        onClick={() => router.push(`/queues/${queue.id}`)}
+                      >
+                        Details
+                      </Button>
+                    </Col>
+                  </Row>
+                  <Row gutter={16} style={{ marginTop: '10px' }}>
+                    <Col span={24}>
+                      <Button
+                        type="link"
+                        icon={
+                          favorites.includes(queue.id) ? (
+                            <StarFilled />
+                          ) : (
+                            <StarOutlined />
+                          )
+                        }
+                        onClick={() => handleFavoriteToggle(queue.id)}
+                      >
+                        {favorites.includes(queue.id)
+                          ? 'Remove from Favorites'
+                          : 'Add to Favorites'}
+                      </Button>
+                    </Col>
+                  </Row>
+                  <Row gutter={16} style={{ marginTop: '10px' }}>
+                    <Col span={24}>
+                      <Text>Category: {getCategoryName(queue.category)}</Text>
+                    </Col>
+                  </Row>
+                </Card>
               </List.Item>
             )}
           />
-          <Button onClick={() => setIsReviewModalVisible(true)}>
-            Leave a Review
-          </Button>
-          <Button onClick={() => router.push(`/queues/${queueId}/reviews`)}>
-            View All Reviews
-          </Button>
-        </TabPane>
-        {isInQueue && (
-          <TabPane tab="Queue Participants" key="2">
-            <List
-              dataSource={participants}
-              renderItem={participant => (
-                <List.Item>
-                  <List.Item.Meta
-                    avatar={<Avatar src={participant.user?.pictureUrl} />}
-                    title={participant.user?.name}
-                    description={`Position: ${participants.indexOf(participant) + 1}`}
-                  />
-                </List.Item>
-              )}
-            />
-          </TabPane>
         )}
-      </Tabs>
-      <Button
-        type="primary"
-        onClick={() => router.push(`/queues/${queueId}/bookings`)}
-      >
-        Book Slot
-      </Button>
-      {isInQueue ? (
-        <Button type="default" onClick={handleLeaveQueue}>
-          Leave Queue
-        </Button>
-      ) : (
-        <Button type="primary" onClick={handleJoinQueue}>
-          Join Queue
-        </Button>
-      )}
-      <Modal
-        title="Leave a Review"
-        visible={isReviewModalVisible}
-        onCancel={() => setIsReviewModalVisible(false)}
-        footer={null}
-      >
-        <Form onFinish={handleReviewSubmit}>
-          <Form.Item name="rating" label="Rating" rules={[{ required: true }]}>
-            <Rate />
-          </Form.Item>
-          <Form.Item
-            name="reviewText"
-            label="Review"
-            rules={[{ required: true }]}
-          >
-            <Input.TextArea />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit">
-              Submit
-            </Button>
-          </Form.Item>
-        </Form>
-      </Modal>
+      </Space>
     </PageLayout>
   )
 }
