@@ -1,23 +1,22 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Typography, Row, Col, Card, Button, Space } from 'antd'
 import {
-  LoadingOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
+  LoadingOutlined,
 } from '@ant-design/icons'
-const { Title, Text } = Typography
-import { useAuthentication } from '@web/modules/authentication'
-import dayjs from 'dayjs'
-import { useSnackbar } from 'notistack'
-import { useRouter, useParams } from 'next/navigation'
 import { Api, Model } from '@web/domain'
 import { PageLayout } from '@web/layouts/Page.layout'
+import { useAuthentication } from '@web/modules/authentication'
+import { Button, Card, Col, Row, Space, Typography } from 'antd'
+import dayjs from 'dayjs'
+import { useRouter } from 'next/navigation'
+import { useSnackbar } from 'notistack'
+import { useEffect, useState } from 'react'
+const { Title, Text } = Typography
 
 export default function MyQueuePage() {
   const router = useRouter()
-  const params = useParams<any>()
   const authentication = useAuthentication()
   const userId = authentication.user?.id
   const { enqueueSnackbar } = useSnackbar()
@@ -46,6 +45,14 @@ export default function MyQueuePage() {
   const handleCancelBooking = (bookingId: string) => {
     // Implement cancel booking logic
     enqueueSnackbar('Booking cancelled successfully', { variant: 'success' })
+  }
+
+  const calculateEstimatedWaitTime = (queue: Model.Queue, position: number) => {
+    if (!queue.averageTime) return 'N/A'
+    const [hours, minutes] = queue.averageTime.split(':').map(Number)
+    const totalMinutes = hours * 60 + minutes
+    const estimatedWaitTime = dayjs().add(totalMinutes * position, 'minute')
+    return estimatedWaitTime.format('hh:mm A') // 12-hour format with AM/PM
   }
 
   if (loading) {
@@ -79,7 +86,7 @@ export default function MyQueuePage() {
                   <Text>Position: {participant.position}</Text>
                   <br />
                   <Text>
-                    Estimated Wait Time: {participant.queue?.operatingHours}
+                    Estimated Wait Time: {calculateEstimatedWaitTime(participant.queue, participant.position)}
                   </Text>
                   <br />
                   <Space>
