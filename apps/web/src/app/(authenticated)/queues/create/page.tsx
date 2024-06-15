@@ -73,7 +73,7 @@ export default function CreateQueuePage() {
       };
       await Api.Queue.createOneByServiceProviderId(userId, queueValues);
       enqueueSnackbar('Queue created successfully', { variant: 'success' });
-      router.push('/my-queues');
+      router.push('/queue-dashboard');
     } catch (error) {
       enqueueSnackbar('Failed to create queue', { variant: 'error' });
     }
