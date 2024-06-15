@@ -1,9 +1,9 @@
 'use client'
 
-import { UploadOutlined } from '@ant-design/icons'
-import { Api, Model } from '@web/domain'
-import { PageLayout } from '@web/layouts/Page.layout'
-import { useAuthentication } from '@web/modules/authentication'
+import { UploadOutlined } from '@ant-design/icons';
+import { Api, Model } from '@web/domain';
+import { PageLayout } from '@web/layouts/Page.layout';
+import { useAuthentication } from '@web/modules/authentication';
 import {
   Button,
   Col,
@@ -14,49 +14,49 @@ import {
   TimePicker,
   Typography,
   Upload,
-} from 'antd'
-import { useRouter } from 'next/navigation'
-import { useSnackbar } from 'notistack'
-import { useEffect, useState } from 'react'
+} from 'antd';
+import { useRouter } from 'next/navigation';
+import { useSnackbar } from 'notistack';
+import { useEffect, useState } from 'react';
 
-const { Title, Paragraph } = Typography
-const { Option } = Select
+const { Title, Paragraph } = Typography;
+const { Option } = Select;
 
 export default function CreateQueuePage() {
-  const router = useRouter()
-  const authentication = useAuthentication()
-  const userId = authentication.user?.id
-  const { enqueueSnackbar } = useSnackbar()
+  const router = useRouter();
+  const authentication = useAuthentication();
+  const userId = authentication.user?.id;
+  const { enqueueSnackbar } = useSnackbar();
 
-  const [categories, setCategories] = useState<Model.QueueCategory[]>([])
-  const [fileList, setFileList] = useState<any[]>([])
+  const [categories, setCategories] = useState<Model.QueueCategory[]>([]);
+  const [fileList, setFileList] = useState<any[]>([]);
   const [services, setServices] = useState<
     { serviceName: string; serviceDescription?: string }[]
-  >([])
-  const [form] = Form.useForm()
+  >([]);
+  const [form] = Form.useForm();
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const categoriesFound = await Api.QueueCategory.findMany()
-        setCategories(categoriesFound)
+        const categoriesFound = await Api.QueueCategory.findMany();
+        setCategories(categoriesFound);
       } catch (error) {
-        enqueueSnackbar('Failed to load categories', { variant: 'error' })
+        enqueueSnackbar('Failed to load categories', { variant: 'error' });
       }
-    }
+    };
 
-    fetchCategories()
-  }, [enqueueSnackbar])
+    fetchCategories();
+  }, [enqueueSnackbar]);
 
   const handleUpload = async (options: any) => {
-    const { file } = options
+    const { file } = options;
     try {
-      const url = await Api.Upload.upload(file)
-      setFileList([{ url, status: 'done' }])
+      const url = await Api.Upload.upload(file);
+      setFileList([{ url, status: 'done' }]);
     } catch (error) {
-      enqueueSnackbar('Failed to upload logo', { variant: 'error' })
+      enqueueSnackbar('Failed to upload logo', { variant: 'error' });
     }
-  }
+  };
 
   const handleFinish = async (values: any) => {
     try {
@@ -70,24 +70,24 @@ export default function CreateQueuePage() {
         services: services,
         averageTime: values.averageTime.format('HH:mm'),
         operatingDays: values.operatingDays,
-      }
-      await Api.Queue.createOneByServiceProviderId(userId, queueValues)
-      enqueueSnackbar('Queue created successfully', { variant: 'success' })
-      router.push('/my-queues')
+      };
+      await Api.Queue.createOneByServiceProviderId(userId, queueValues);
+      enqueueSnackbar('Queue created successfully', { variant: 'success' });
+      router.push('/my-queues');
     } catch (error) {
-      enqueueSnackbar('Failed to create queue', { variant: 'error' })
+      enqueueSnackbar('Failed to create queue', { variant: 'error' });
     }
-  }
+  };
 
   const handleAddService = () => {
-    setServices([...services, { serviceName: '', serviceDescription: '' }])
-  }
+    setServices([...services, { serviceName: '', serviceDescription: '' }]);
+  };
 
   const handleServiceChange = (index: number, field: string, value: string) => {
-    const newServices = [...services]
-    newServices[index][field] = value
-    setServices(newServices)
-  }
+    const newServices = [...services];
+    newServices[index][field] = value;
+    setServices(newServices);
+  };
 
   return (
     <PageLayout layout="narrow">
@@ -204,5 +204,5 @@ export default function CreateQueuePage() {
         </Form.Item>
       </Form>
     </PageLayout>
-  )
+  );
 }
