@@ -1,30 +1,30 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import {
-  Typography,
-  Carousel,
-  Button,
-  Spin,
-  Row,
-  Col,
-  Card,
-} from 'antd'
 import {
   CheckCircleOutlined,
 } from '@ant-design/icons'
-const { Title, Paragraph } = Typography
-import { useAuthentication } from '@web/modules/authentication'
-import dayjs from 'dayjs'
-import { useSnackbar } from 'notistack'
-import { useRouter, useParams } from 'next/navigation'
 import { Api, Model } from '@web/domain'
 import { PageLayout } from '@web/layouts/Page.layout'
+import { useAuthentication } from '@web/modules/authentication'
+import {
+  Button,
+  Card,
+  Carousel,
+  Col,
+  Row,
+  Spin,
+  Typography,
+} from 'antd'
+import dayjs from 'dayjs'
+import { useParams, useRouter } from 'next/navigation'
+import { useSnackbar } from 'notistack'
+import { useEffect, useState } from 'react'
 import { io } from 'socket.io-client'
+const { Title, Paragraph } = Typography
 
 export default function ManageQueuePage() {
   const router = useRouter()
-  const params = useParams<any>()
+  const params = useParams()
   const authentication = useAuthentication()
   const userId = authentication.user?.id
   const { enqueueSnackbar } = useSnackbar()
@@ -34,25 +34,25 @@ export default function ManageQueuePage() {
   const [location, setLocation] = useState<string | undefined>(undefined)
   const [participantCount, setParticipantCount] = useState<number>(0)
 
-  useEffect(() => {
-    const fetchQueueData = async () => {
-      try {
-        const queueData = await Api.Queue.findManyByServiceProviderId(userId, {
-          includes: ['participants', 'participants.user'],
-        })
-        if (queueData.length > 0) {
-          setQueue(queueData[0])
-          setParticipants(queueData[0].participants || [])
-          setLocation(queueData[0].location)
-          setParticipantCount(queueData[0].participants?.length || 0)
-        }
-      } catch (error) {
-        enqueueSnackbar('Failed to load queue data', { variant: 'error' })
-      } finally {
-        setLoading(false)
+  const fetchQueueData = async () => {
+    try {
+      const queueData = await Api.Queue.findManyByServiceProviderId(userId, {
+        includes: ['participants', 'participants.user'],
+      })
+      if (queueData.length > 0) {
+        setQueue(queueData[0])
+        setParticipants(queueData[0].participants || [])
+        setLocation(queueData[0].location)
+        setParticipantCount(queueData[0].participants?.length || 0)
       }
+    } catch (error) {
+      enqueueSnackbar('Failed to load queue data', { variant: 'error' })
+    } finally {
+      setLoading(false)
     }
+  }
 
+  useEffect(() => {
     fetchQueueData()
   }, [userId])
 
@@ -60,8 +60,7 @@ export default function ManageQueuePage() {
     const socket = io()
 
     socket.on('newParticipant', (newParticipant: Model.Participant) => {
-      setParticipants(prev => [...prev, newParticipant])
-      setParticipantCount(prevCount => prevCount + 1)
+      fetchQueueData()
     })
 
     return () => {
