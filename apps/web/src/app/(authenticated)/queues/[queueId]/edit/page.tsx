@@ -1,60 +1,76 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { UploadOutlined } from '@ant-design/icons';
+import { Api, Model } from '@web/domain';
+import { PageLayout } from '@web/layouts/Page.layout';
+import { useAuthentication } from '@web/modules/authentication';
 import {
-  Typography,
+  Button,
   Form,
   Input,
-  Button,
-  Upload,
-  Row,
-  Col,
   Select,
-  TimePicker,
   Space,
-} from 'antd'
-import { UploadOutlined } from '@ant-design/icons'
-const { Title, Text } = Typography
-const { Option } = Select
-import { useAuthentication } from '@web/modules/authentication'
-import dayjs from 'dayjs'
-import { useSnackbar } from 'notistack'
-import { useRouter, useParams } from 'next/navigation'
-import { Api, Model } from '@web/domain'
-import { PageLayout } from '@web/layouts/Page.layout'
+  TimePicker,
+  Typography,
+  Upload
+} from 'antd';
+import dayjs from 'dayjs';
+import { useParams, useRouter } from 'next/navigation';
+import { useSnackbar } from 'notistack';
+import { useEffect, useState } from 'react';
+const { Title, Text } = Typography;
+const { Option } = Select;
 
 export default function EditQueuePage() {
-  const router = useRouter()
-  const params = useParams<any>()
-  const authentication = useAuthentication()
-  const userId = authentication.user?.id
-  const { enqueueSnackbar } = useSnackbar()
-  const [queue, setQueue] = useState<Model.Queue | null>(null)
-  const [services, setServices] = useState<Model.Service[]>([])
-  const [fileList, setFileList] = useState<any[]>([])
+  const router = useRouter();
+  const params = useParams<any>();
+  const authentication = useAuthentication();
+  const userId = authentication.user?.id;
+  const { enqueueSnackbar } = useSnackbar();
+  const [queue, setQueue] = useState<Model.Queue | null>(null);
+  const [services, setServices] = useState<Model.Service[]>([]);
+  const [fileList, setFileList] = useState<any[]>([]);
+  const [form] = Form.useForm();
+  const [isUpdated, setIsUpdated] = useState(false); // State to track form changes
 
   useEffect(() => {
     const fetchQueue = async () => {
       try {
         const fetchedQueue = await Api.Queue.findOne(params.queueId, {
           includes: ['services'],
-        })
-        setQueue(fetchedQueue)
-        setServices(fetchedQueue.services || [])
-        setFileList([{ url: fetchedQueue.logoUrl, status: 'done' }])
+        });
+        setQueue(fetchedQueue);
+        setServices(fetchedQueue.services || []);
+        setFileList([{ url: fetchedQueue.logoUrl, status: 'done' }]);
+        form.setFieldsValue({
+          name: fetchedQueue.name,
+          description: fetchedQueue.description,
+          location: fetchedQueue.location,
+          category: fetchedQueue.category,
+          contactPhone: fetchedQueue.contactPhone,
+          contactEmail: fetchedQueue.contactEmail,
+          pincode: fetchedQueue.pincode,
+          openingHours: dayjs(fetchedQueue.operatingHours?.split(' - ')[0], 'HH:mm'),
+          closingHours: dayjs(fetchedQueue.operatingHours?.split(' - ')[1], 'HH:mm'),
+          services: fetchedQueue.services.map(service => ({
+            serviceName: service.serviceName,
+            serviceDescription: service.serviceDescription,
+          })),
+        });
       } catch (error) {
-        enqueueSnackbar('Failed to fetch queue data', { variant: 'error' })
+        enqueueSnackbar('Failed to fetch queue data', { variant: 'error' });
       }
-    }
+    };
 
-    fetchQueue()
-  }, [params.queueId])
+    fetchQueue();
+  }, [params.queueId, form]);
 
   const handleUpload = async (options: any) => {
-    const { file } = options
-    const url = await Api.Upload.upload(file)
-    setFileList([{ url, status: 'done' }])
-  }
+    const { file } = options;
+    const url = await Api.Upload.upload(file);
+    setFileList([{ url, status: 'done' }]);
+    setIsUpdated(true);
+  };
 
   const handleFinish = async (values: any) => {
     try {
@@ -62,42 +78,27 @@ export default function EditQueuePage() {
         ...values,
         logoUrl: fileList[0]?.url,
         operatingHours: `${dayjs(values.openingHours).format('HH:mm')} - ${dayjs(values.closingHours).format('HH:mm')}`,
-      })
-      enqueueSnackbar('Queue updated successfully', { variant: 'success' })
-      router.push(`/queues/${params.queueId}/manage`)
+      });
+      enqueueSnackbar('Queue updated successfully', { variant: 'success' });
+      router.push(`/queues/${params.queueId}/manage`);
     } catch (error) {
-      enqueueSnackbar('Failed to update queue', { variant: 'error' })
+      enqueueSnackbar('Failed to update queue', { variant: 'error' });
     }
-  }
+  };
+
+  const handleFormChange = () => {
+    setIsUpdated(true);
+  };
 
   return (
     <PageLayout layout="narrow">
       <Title level={2}>Edit Queue</Title>
       <Text>Update your queue details and services provided.</Text>
       <Form
+        form={form}
         layout="vertical"
         onFinish={handleFinish}
-        initialValues={
-          queue
-            ? {
-                name: queue.name,
-                description: queue.description,
-                location: queue.location,
-                category: queue.category,
-                contactPhone: queue.contactPhone,
-                contactEmail: queue.contactEmail,
-                pincode: queue.pincode,
-                openingHours: dayjs(
-                  queue.operatingHours?.split(' - ')[0],
-                  'HH:mm',
-                ),
-                closingHours: dayjs(
-                  queue.operatingHours?.split(' - ')[1],
-                  'HH:mm',
-                ),
-              }
-            : {}
-        }
+        onValuesChange={handleFormChange}
       >
         <Form.Item
           name="name"
@@ -191,11 +192,11 @@ export default function EditQueuePage() {
           )}
         </Form.List>
         <Form.Item>
-          <Button type="primary" htmlType="submit">
+          <Button type="primary" htmlType="submit" disabled={!isUpdated}>
             Save Changes
           </Button>
         </Form.Item>
       </Form>
     </PageLayout>
-  )
+  );
 }

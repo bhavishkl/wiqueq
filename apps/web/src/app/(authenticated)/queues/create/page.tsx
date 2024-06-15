@@ -30,7 +30,9 @@ export default function CreateQueuePage() {
 
   const [categories, setCategories] = useState<Model.QueueCategory[]>([]);
   const [fileList, setFileList] = useState<any[]>([]);
-  const [services, setServices] = useState<string[]>([]);
+  const [services, setServices] = useState<
+    { serviceName: string; serviceDescription?: string }[]
+  >([]);
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -78,12 +80,12 @@ export default function CreateQueuePage() {
   };
 
   const handleAddService = () => {
-    setServices([...services, '']);
+    setServices([...services, { serviceName: '', serviceDescription: '' }]);
   };
 
-  const handleServiceChange = (index: number, value: string) => {
+  const handleServiceChange = (index: number, field: string, value: string) => {
     const newServices = [...services];
-    newServices[index] = value;
+    newServices[index][field] = value;
     setServices(newServices);
   };
 
@@ -166,11 +168,27 @@ export default function CreateQueuePage() {
         <Title level={4}>Services</Title>
         {services.map((service, index) => (
           <Row key={index} gutter={16}>
-            <Col span={24}>
-              <Form.Item label="Service">
+            <Col span={12}>
+              <Form.Item label="Service Name">
                 <Input
-                  value={service}
-                  onChange={e => handleServiceChange(index, e.target.value)}
+                  value={service.serviceName}
+                  onChange={e =>
+                    handleServiceChange(index, 'serviceName', e.target.value)
+                  }
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item label="Service Description">
+                <Input
+                  value={service.serviceDescription}
+                  onChange={e =>
+                    handleServiceChange(
+                      index,
+                      'serviceDescription',
+                      e.target.value,
+                    )
+                  }
                 />
               </Form.Item>
             </Col>
