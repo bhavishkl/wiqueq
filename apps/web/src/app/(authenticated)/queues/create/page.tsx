@@ -30,9 +30,7 @@ export default function CreateQueuePage() {
 
   const [categories, setCategories] = useState<Model.QueueCategory[]>([]);
   const [fileList, setFileList] = useState<any[]>([]);
-  const [services, setServices] = useState<
-    { serviceName: string; serviceDescription?: string }[]
-  >([]);
+  const [services, setServices] = useState<string[]>([]);
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -80,12 +78,12 @@ export default function CreateQueuePage() {
   };
 
   const handleAddService = () => {
-    setServices([...services, { serviceName: '', serviceDescription: '' }]);
+    setServices([...services, '']);
   };
 
-  const handleServiceChange = (index: number, field: string, value: string) => {
+  const handleServiceChange = (index: number, value: string) => {
     const newServices = [...services];
-    newServices[index][field] = value;
+    newServices[index] = value;
     setServices(newServices);
   };
 
@@ -168,27 +166,11 @@ export default function CreateQueuePage() {
         <Title level={4}>Services</Title>
         {services.map((service, index) => (
           <Row key={index} gutter={16}>
-            <Col span={12}>
-              <Form.Item label="Service Name">
+            <Col span={24}>
+              <Form.Item label="Service">
                 <Input
-                  value={service.serviceName}
-                  onChange={e =>
-                    handleServiceChange(index, 'serviceName', e.target.value)
-                  }
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="Service Description">
-                <Input
-                  value={service.serviceDescription}
-                  onChange={e =>
-                    handleServiceChange(
-                      index,
-                      'serviceDescription',
-                      e.target.value,
-                    )
-                  }
+                  value={service}
+                  onChange={e => handleServiceChange(index, e.target.value)}
                 />
               </Form.Item>
             </Col>
