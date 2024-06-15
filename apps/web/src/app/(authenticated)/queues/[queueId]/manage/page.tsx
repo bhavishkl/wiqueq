@@ -24,7 +24,7 @@ const { Title, Paragraph } = Typography
 
 export default function ManageQueuePage() {
   const router = useRouter()
-  const params = useParams()
+  const params = useParams<any>()
   const authentication = useAuthentication()
   const userId = authentication.user?.id
   const { enqueueSnackbar } = useSnackbar()
@@ -34,25 +34,25 @@ export default function ManageQueuePage() {
   const [location, setLocation] = useState<string | undefined>(undefined)
   const [participantCount, setParticipantCount] = useState<number>(0)
 
-  const fetchQueueData = async () => {
-    try {
-      const queueData = await Api.Queue.findManyByServiceProviderId(userId, {
-        includes: ['participants', 'participants.user'],
-      })
-      if (queueData.length > 0) {
-        setQueue(queueData[0])
-        setParticipants(queueData[0].participants || [])
-        setLocation(queueData[0].location)
-        setParticipantCount(queueData[0].participants?.length || 0)
-      }
-    } catch (error) {
-      enqueueSnackbar('Failed to load queue data', { variant: 'error' })
-    } finally {
-      setLoading(false)
-    }
-  }
-
   useEffect(() => {
+    const fetchQueueData = async () => {
+      try {
+        const queueData = await Api.Queue.findManyByServiceProviderId(userId, {
+          includes: ['participants', 'participants.user'],
+        })
+        if (queueData.length > 0) {
+          setQueue(queueData[0])
+          setParticipants(queueData[0].participants || [])
+          setLocation(queueData[0].location)
+          setParticipantCount(queueData[0].participants?.length || 0)
+        }
+      } catch (error) {
+        enqueueSnackbar('Failed to load queue data', { variant: 'error' })
+      } finally {
+        setLoading(false)
+      }
+    }
+
     fetchQueueData()
   }, [userId])
 
@@ -60,7 +60,8 @@ export default function ManageQueuePage() {
     const socket = io()
 
     socket.on('newParticipant', (newParticipant: Model.Participant) => {
-      fetchQueueData()
+      setParticipants(prev => [...prev, newParticipant])
+      setParticipantCount(prevCount => prevCount + 1)
     })
 
     return () => {
