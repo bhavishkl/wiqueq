@@ -259,9 +259,6 @@ export default function HomePage() {
                   </Row>
                   <Row gutter={16} style={{ marginTop: '10px' }}>
                     <Col span={24}>
-Continuing with the code to implement the required changes:
-
-```typescript
                     <Text>Category: {getCategoryName(queue.category)}</Text>
                   </Col>
                 </Row>
