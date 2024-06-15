@@ -37,14 +37,32 @@ export default function MyQueuePage() {
     }
   }, [userId])
 
-  const handleLeaveQueue = (queueId: string) => {
-    // Implement leave queue logic
-    enqueueSnackbar('Left the queue successfully', { variant: 'success' })
+  const handleLeaveQueue = (participantId: string) => {
+    Api.Participant.remove(participantId)
+      .then(() => {
+        enqueueSnackbar('Left the queue successfully', { variant: 'success' })
+        setUser(prevUser => ({
+          ...prevUser,
+          participants: prevUser.participants.filter(p => p.id !== participantId),
+        }))
+      })
+      .catch(error => {
+        enqueueSnackbar('Failed to leave the queue', { variant: 'error' })
+      })
   }
 
   const handleCancelBooking = (bookingId: string) => {
-    // Implement cancel booking logic
-    enqueueSnackbar('Booking cancelled successfully', { variant: 'success' })
+    Api.Booking.remove(bookingId)
+      .then(() => {
+        enqueueSnackbar('Booking cancelled successfully', { variant: 'success' })
+        setUser(prevUser => ({
+          ...prevUser,
+          bookings: prevUser.bookings.filter(b => b.id !== bookingId),
+        }))
+      })
+      .catch(error => {
+        enqueueSnackbar('Failed to cancel booking', { variant: 'error' })
+      })
   }
 
   const calculateEstimatedWaitTime = (queue: Model.Queue, position: number) => {
@@ -100,7 +118,7 @@ export default function MyQueuePage() {
                     </Button>
                     <Button
                       danger
-                      onClick={() => handleLeaveQueue(participant.queue?.id)}
+                      onClick={() => handleLeaveQueue(participant.id)}
                     >
                       Leave Queue
                     </Button>
