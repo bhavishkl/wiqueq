@@ -35,11 +35,19 @@ export namespace Api {
 
   export class Queue extends QueueApi {}
 
-  export class Participant extends ParticipantApi {}
+  export class Participant extends ParticipantApi {
+    static remove(participantId: string) {
+      throw new Error('Method not implemented.')
+    }
+}
 
   export class Favorite extends FavoriteApi {}
 
-  export class Booking extends BookingApi {}
+  export class Booking extends BookingApi {
+    static remove(bookingId: string) {
+      throw new Error('Method not implemented.')
+    }
+}
 
   export class Review extends ReviewApi {}
 

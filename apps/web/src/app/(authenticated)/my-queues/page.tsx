@@ -26,11 +26,16 @@ export default function MyQueuePage() {
 
   useEffect(() => {
     if (userId) {
+      console.log('Fetching user data...')
       Api.User.findOne(userId, {
         includes: ['participants.queue', 'bookings.queue'],
       })
-        .then(setUser)
+        .then(user => {
+          console.log('User data:', user)
+          setUser(user)
+        })
         .catch(error => {
+          console.error('Failed to load user data:', error)
           enqueueSnackbar('Failed to load user data', { variant: 'error' })
         })
         .finally(() => setLoading(false))
@@ -38,6 +43,7 @@ export default function MyQueuePage() {
   }, [userId])
 
   const handleLeaveQueue = (participantId: string) => {
+    console.log('Leaving queue for participant:', participantId)
     Api.Participant.remove(participantId)
       .then(() => {
         enqueueSnackbar('Left the queue successfully', { variant: 'success' })
@@ -47,11 +53,13 @@ export default function MyQueuePage() {
         }))
       })
       .catch(error => {
+        console.error('Failed to leave the queue:', error)
         enqueueSnackbar('Failed to leave the queue', { variant: 'error' })
       })
   }
 
   const handleCancelBooking = (bookingId: string) => {
+    console.log('Cancelling booking:', bookingId)
     Api.Booking.remove(bookingId)
       .then(() => {
         enqueueSnackbar('Booking cancelled successfully', { variant: 'success' })
@@ -61,6 +69,7 @@ export default function MyQueuePage() {
         }))
       })
       .catch(error => {
+        console.error('Failed to cancel booking:', error)
         enqueueSnackbar('Failed to cancel booking', { variant: 'error' })
       })
   }
@@ -101,7 +110,7 @@ export default function MyQueuePage() {
                 </Col>
                 <Col span={20}>
                   <Title level={4}>{participant.queue?.name}</Title>
-                  <Text>Position: {participant.position}</Text>
+                  <Text>Position: {participant.position ?? 'N/A'}</Text>
                   <br />
                   <Text>
                     Estimated Wait Time: {calculateEstimatedWaitTime(participant.queue, participant.position)}
