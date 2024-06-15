@@ -1,4 +1,4 @@
-"use client";
+'use client'
 
 import { StarFilled, StarOutlined } from '@ant-design/icons';
 import { Api, Model } from '@web/domain';
@@ -11,12 +11,11 @@ import {
   Input,
   List,
   Modal,
-  Rate,
   Row,
   Select,
   Space,
   Spin,
-  Typography,
+  Typography
 } from 'antd';
 import debounce from 'lodash/debounce';
 import { useParams, useRouter } from 'next/navigation';
@@ -234,15 +233,17 @@ export default function HomePage() {
                 <Card
                   title={queue.name}
                   extra={
-                    <Rate
-                      disabled
-                      defaultValue={
-                        queue.reviews?.reduce(
-                          (acc, review) => acc + review.rating,
-                          0,
-                        ) / queue.reviews?.length || 0
-                      }
-                    />
+                    <Space>
+                      <StarFilled style={{ color: '#fadb14' }} />
+                      <Text>
+                        {(
+                          queue.reviews?.reduce(
+                            (acc, review) => acc + review.rating,
+                            0,
+                          ) / queue.reviews?.length || 0
+                        ).toFixed(1)}
+                      </Text>
+                    </Space>
                   }
                   style={{ width: '100%' }}
                 >
@@ -257,72 +258,71 @@ export default function HomePage() {
                     </Col>
                   </Row>
                   <Row gutter={16} style={{ marginTop: '10px' }}>
-                    <Col span={12}>
-                      {participants.includes(queue.id) ? (
-                        <Button
-                          type="primary"
-                          danger
-                          onClick={() => handleLeaveQueue(queue.id)}
-                        >
-                          Leave Queue
-                        </Button>
-                      ) : (
-                        <Button
-                          type="primary"
-                          onClick={() => handleJoinQueue(queue.id)}
-                        >
-                          Join Queue
-                        </Button>
-                      )}
-                    </Col>
-                    <Col span={12}>
-                      <Button
-                        onClick={() => router.push(`/queues/${queue.id}`)}
-                      >
-                        Details
-                      </Button>
-                    </Col>
-                  </Row>
-                  <Row gutter={16} style={{ marginTop: '10px' }}>
                     <Col span={24}>
+Continuing with the code to implement the required changes:
+
+```typescript
+                    <Text>Category: {getCategoryName(queue.category)}</Text>
+                  </Col>
+                </Row>
+                <Row gutter={16} style={{ marginTop: '10px' }}>
+                  <Col span={12}>
+                    {participants.includes(queue.id) ? (
                       <Button
-                        type="link"
-                        icon={
-                          favorites.includes(queue.id) ? (
-                            <StarFilled />
-                          ) : (
-                            <StarOutlined />
-                          )
-                        }
-                        onClick={() => handleFavoriteToggle(queue.id)}
+                        type="primary"
+                        danger
+                        onClick={() => handleLeaveQueue(queue.id)}
                       >
-                        {favorites.includes(queue.id)
-                          ? 'Remove from Favorites'
-                          : 'Add to Favorites'}
+                        Leave Queue
                       </Button>
-                    </Col>
-                  </Row>
-                  <Row gutter={16} style={{ marginTop: '10px' }}>
-                    <Col span={24}>
-                      <Text>Category: {getCategoryName(queue.category)}</Text>
-                    </Col>
-                  </Row>
-                </Card>
-              </List.Item>
-            )}
-          />
-        )}
-      </Space>
-      <Modal
-        visible={showLeaveQueueModal}
-        onCancel={() => setShowLeaveQueueModal(false)}
-        onOk={handleLeaveQueue}
-        title="Leave Current Queue"
-        okText="Leave Queue"
-        cancelText="Cancel"
-      >
-        <p>You are already in a queue. Do you want to leave the current queue to join another one?</p>
-      </Modal>
-    </PageLayout>
-  )
+                    ) : (
+                      <Button
+                        type="primary"
+                        onClick={() => handleJoinQueue(queue.id)}
+                      >
+                        Join Queue
+                      </Button>
+                    )}
+                  </Col>
+                  <Col span={12}>
+                    <Button
+                      onClick={() => router.push(`/queues/${queue.id}`)}
+                    >
+                      Details
+                    </Button>
+                  </Col>
+                </Row>
+                <Row gutter={16} style={{ marginTop: '10px' }}>
+                  <Col span={24}>
+                    <Button
+                      type="link"
+                      icon={
+                        favorites.includes(queue.id) ? (
+                          <StarFilled />
+                        ) : (
+                          <StarOutlined />
+                        )
+                      }
+                      onClick={() => handleFavoriteToggle(queue.id)}
+                    />
+                  </Col>
+                </Row>
+              </Card>
+            </List.Item>
+          )}
+        />
+      )}
+    </Space>
+    <Modal
+      visible={showLeaveQueueModal}
+      onCancel={() => setShowLeaveQueueModal(false)}
+      onOk={handleLeaveQueue}
+      title="Leave Current Queue"
+      okText="Leave Queue"
+      cancelText="Cancel"
+    >
+      <p>You are already in a queue. Do you want to leave the current queue to join another one?</p>
+    </Modal>
+  </PageLayout>
+)
 }
