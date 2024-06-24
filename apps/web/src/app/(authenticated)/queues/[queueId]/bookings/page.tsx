@@ -6,21 +6,20 @@ import { PageLayout } from '@web/layouts/Page.layout'
 import { useAuthentication } from '@web/modules/authentication'
 import {
   Button,
+  Checkbox,
   Col,
   DatePicker,
   Form,
   Row,
-  Select,
   Spin,
   TimePicker,
-  Typography
+  Typography,
 } from 'antd'
 import dayjs from 'dayjs'
 import { useParams, useRouter } from 'next/navigation'
 import { useSnackbar } from 'notistack'
 import { useEffect, useState } from 'react'
 const { Title, Text } = Typography
-const { Option } = Select
 
 export default function BookingsPage() {
   const router = useRouter()
@@ -42,7 +41,12 @@ export default function BookingsPage() {
         })
         if (services.length > 0) {
           const queue = services[0].queue
-          setServices(services)
+          setServices(
+            services.map(service => ({
+              ...service,
+              serviceName: service.name,
+            })),
+          )
           setQueueName(queue?.name || '')
           setLocation(queue?.location || '')
         }
@@ -62,12 +66,19 @@ export default function BookingsPage() {
         .hour(values.time.hour())
         .minute(values.time.minute())
         .toISOString()
-      await Api.Booking.createOneByUserId(userId, {
-        bookingTime,
-        serviceId: values.service,
-        status: 'confirmed',
-        queueId: params.queueId,
-      })
+      const selectedServices = services.filter(service =>
+        values.services.includes(service.id),
+      )
+      await Promise.all(
+        selectedServices.map(service =>
+          Api.Booking.createOneByUserId(userId, {
+            bookingTime,
+            service: service.id,
+            status: 'confirmed',
+            queueId: params.queueId,
+          }),
+        ),
+      )
       enqueueSnackbar('Booking successful', { variant: 'success' })
       router.push('/my-queues')
     } catch (error) {
@@ -118,18 +129,19 @@ export default function BookingsPage() {
                 style={{ width: '100%' }}
               />
             </Form.Item>
-            <Form.Item
-              label="Service"
-              name="service"
-              rules={[{ required: true, message: 'Please select a service' }]}
-            >
-              <Select placeholder="Select a service">
-                {services.map(service => (
-                  <Option key={service.id} value={service.id}>
-                    {service.serviceName}
-                  </Option>
-                ))}
-              </Select>
+            <Form.Item label="Services">
+              <Form.Item
+                name="services"
+                rules={[{ required: true, message: 'Please select a service' }]}
+              >
+                <Checkbox.Group>
+                  {services.map(service => (
+                    <Checkbox key={service.id} value={service.id}>
+                      {service.serviceName}
+                    </Checkbox>
+                  ))}
+                </Checkbox.Group>
+              </Form.Item>
             </Form.Item>
             <Form.Item>
               <Button

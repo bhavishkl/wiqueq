@@ -5,9 +5,7 @@ import { Queue } from '../queue'
 export class Service {
   id: string
 
-  serviceName: string
-
-  serviceDescription?: string
+  name: string
 
   queueId?: string
 

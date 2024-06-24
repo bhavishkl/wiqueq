@@ -1,9 +1,9 @@
 'use client'
 
-import { StarFilled, StarOutlined } from '@ant-design/icons';
-import { Api, Model } from '@web/domain';
-import { PageLayout } from '@web/layouts/Page.layout';
-import { useAuthentication } from '@web/modules/authentication';
+import { StarFilled, StarOutlined } from '@ant-design/icons'
+import { Api, Model } from '@web/domain'
+import { PageLayout } from '@web/layouts/Page.layout'
+import { useAuthentication } from '@web/modules/authentication'
 import {
   Button,
   Card,
@@ -15,12 +15,13 @@ import {
   Select,
   Space,
   Spin,
-  Typography
-} from 'antd';
-import debounce from 'lodash/debounce';
-import { useParams, useRouter } from 'next/navigation';
-import { useSnackbar } from 'notistack';
-import { useCallback, useEffect, useState } from 'react';
+  Typography,
+} from 'antd'
+import debounce from 'lodash/debounce'
+import { useRouter } from 'next/navigation'
+import { useSnackbar } from 'notistack'
+import { useCallback, useEffect, useState } from 'react'
+import { useMemo } from 'react'
 
 const { Title, Text } = Typography
 const { Search } = Input
@@ -28,7 +29,6 @@ const { Option } = Select
 
 export default function HomePage() {
   const router = useRouter()
-  const params = useParams<any>()
   const authentication = useAuthentication()
   const userId = authentication.user?.id
   const { enqueueSnackbar } = useSnackbar()
@@ -36,36 +36,51 @@ export default function HomePage() {
   const [queues, setQueues] = useState<Model.Queue[]>([])
   const [categories, setCategories] = useState<Model.QueueCategory[]>([])
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined)
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(
+    undefined,
+  )
   const [loading, setLoading] = useState(false)
   const [favorites, setFavorites] = useState<string[]>([])
   const [participants, setParticipants] = useState<string[]>([])
-  const [participantsCount, setParticipantsCount] = useState<{ [key: string]: number }>({})
+  const [participantsCount, setParticipantsCount] = useState<{
+    [key: string]: number
+  }>({})
   const [currentQueue, setCurrentQueue] = useState<Model.Queue | null>(null)
   const [showLeaveQueueModal, setShowLeaveQueueModal] = useState(false)
   const [pendingQueueId, setPendingQueueId] = useState<string | null>(null)
+
+  const predefinedCategories = [
+    { id: 'retail', name: 'Retail' },
+    { id: 'healthcare', name: 'Healthcare' },
+    { id: 'banking', name: 'Banking' },
+    { id: 'entertainment', name: 'Entertainment' },
+    { id: 'restaurant', name: 'Restaurant' },
+  ]
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
       try {
-        const [queuesData, categoriesData, favoritesData, participantsData] =
-          await Promise.all([
+        const [queuesData, favoritesData, participantsData] = await Promise.all(
+          [
             Api.Queue.findMany({
               includes: ['reviews', 'participants', 'favorites'],
             }),
-            Api.QueueCategory.findMany(),
             Api.Favorite.findManyByUserId(userId),
             Api.Participant.findManyByUserId(userId),
-          ])
+          ],
+        )
         setQueues(queuesData)
-        setCategories(categoriesData)
         setFavorites(favoritesData.map(fav => fav.queueId))
         setParticipants(participantsData.map(part => part.queueId))
 
-        const userParticipant = participantsData.find(part => part.userId === userId)
+        const userParticipant = participantsData.find(
+          part => part.userId === userId,
+        )
         if (userParticipant) {
-          const currentQueueData = queuesData.find(queue => queue.id === userParticipant.queueId)
+          const currentQueueData = queuesData.find(
+            queue => queue.id === userParticipant.queueId,
+          )
           setCurrentQueue(currentQueueData || null)
         }
 
@@ -113,7 +128,7 @@ export default function HomePage() {
       setParticipants([...participants, queueId])
       setParticipantsCount(prev => ({
         ...prev,
-        [queueId]: (prev[queueId] || 0) + 1
+        [queueId]: (prev[queueId] || 0) + 1,
       }))
       enqueueSnackbar('Joined queue successfully', { variant: 'success' })
       router.push(`/queues/${queueId}`)
@@ -140,7 +155,7 @@ export default function HomePage() {
         setParticipants(participants.filter(id => id !== currentQueue.id))
         setParticipantsCount(prev => ({
           ...prev,
-          [currentQueue.id]: (prev[currentQueue.id] || 0) - 1
+          [currentQueue.id]: (prev[currentQueue.id] || 0) - 1,
         }))
         setCurrentQueue(null)
         enqueueSnackbar('Left queue successfully', { variant: 'success' })
@@ -189,16 +204,24 @@ export default function HomePage() {
   })
 
   const getCategoryName = (categoryId: string) => {
-    const category = categories.find(cat => cat.id === categoryId)
+    const category = predefinedCategories.find(cat => cat.id === categoryId)
     return category ? category.name : 'Unknown Category'
   }
 
-  const calculateEstimatedWaitTime = (averageTime: string | undefined, participantsCount: number) => {
+  const calculateEstimatedWaitTime = (
+    averageTime: string | undefined,
+    participantsCount: number,
+  ) => {
     if (!averageTime) return 'N/A'
     const [hours, minutes] = averageTime.split(':').map(Number)
-    const totalMinutes = (hours * 60) + minutes
+    const totalMinutes = hours * 60 + minutes
     return totalMinutes * participantsCount
   }
+
+  const memoizedCalculateEstimatedWaitTime = useMemo(() => {
+    return (averageTime: string | undefined, participantsCount: number) =>
+      calculateEstimatedWaitTime(averageTime, participantsCount)
+  }, [])
 
   return (
     <PageLayout layout="narrow">
@@ -207,7 +230,7 @@ export default function HomePage() {
       <Space direction="vertical" style={{ width: '100%' }}>
         <Search
           placeholder="Search queues"
-          onChange={(e) => debouncedHandleSearch(e.target.value)}
+          onChange={e => debouncedHandleSearch(e.target.value)}
           enterButton
         />
         <Select
@@ -216,7 +239,7 @@ export default function HomePage() {
           allowClear
           style={{ width: '100%' }}
         >
-          {categories.map(category => (
+          {predefinedCategories.map(category => (
             <Option key={category.id} value={category.id}>
               {category.name}
             </Option>
@@ -233,64 +256,6 @@ export default function HomePage() {
                 <Card
                   title={queue.name}
                   extra={
-                    <Space>
-                      <StarFilled style={{ color: '#fadb14' }} />
-                      <Text>
-                        {(
-                          queue.reviews?.reduce(
-                            (acc, review) => acc + review.rating,
-                            0,
-                          ) / queue.reviews?.length || 0
-                        ).toFixed(1)}
-                      </Text>
-                    </Space>
-                  }
-                  style={{ width: '100%' }}
-                >
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <Text>
-                        Estimated Wait Time: {calculateEstimatedWaitTime(queue.averageTime, participantsCount[queue.id])} mins
-                      </Text>
-                    </Col>
-                    <Col span={12}>
-                      <Text>Participants: {participantsCount[queue.id]}</Text>
-                    </Col>
-                  </Row>
-                  <Row gutter={16} style={{ marginTop: '10px' }}>
-                    <Col span={24}>
-                    <Text>Category: {getCategoryName(queue.category)}</Text>
-                  </Col>
-                </Row>
-                <Row gutter={16} style={{ marginTop: '10px' }}>
-                  <Col span={12}>
-                    {participants.includes(queue.id) ? (
-                      <Button
-                        type="primary"
-                        danger
-                        onClick={() => handleLeaveQueue(queue.id)}
-                      >
-                        Leave Queue
-                      </Button>
-                    ) : (
-                      <Button
-                        type="primary"
-                        onClick={() => handleJoinQueue(queue.id)}
-                      >
-                        Join Queue
-                      </Button>
-                    )}
-                  </Col>
-                  <Col span={12}>
-                    <Button
-                      onClick={() => router.push(`/queues/${queue.id}`)}
-                    >
-                      Details
-                    </Button>
-                  </Col>
-                </Row>
-                <Row gutter={16} style={{ marginTop: '10px' }}>
-                  <Col span={24}>
                     <Button
                       type="link"
                       icon={
@@ -302,24 +267,90 @@ export default function HomePage() {
                       }
                       onClick={() => handleFavoriteToggle(queue.id)}
                     />
-                  </Col>
-                </Row>
-              </Card>
-            </List.Item>
-          )}
-        />
-      )}
-    </Space>
-    <Modal
-      visible={showLeaveQueueModal}
-      onCancel={() => setShowLeaveQueueModal(false)}
-      onOk={handleLeaveQueue}
-      title="Leave Current Queue"
-      okText="Leave Queue"
-      cancelText="Cancel"
-    >
-      <p>You are already in a queue. Do you want to leave the current queue to join another one?</p>
-    </Modal>
-  </PageLayout>
-)
+                  }
+                  style={{ width: '100%' }}
+                >
+                  <Row gutter={16}>
+                    <Col span={12}>
+                      <Text>
+                        Estimated Wait Time:{' '}
+                        {memoizedCalculateEstimatedWaitTime(
+                          queue.averageTime,
+                          participantsCount[queue.id],
+                        )}{' '}
+                        mins
+                      </Text>
+                    </Col>
+                    <Col span={12}>
+                      <Text>Participants: {participantsCount[queue.id]}</Text>
+                    </Col>
+                  </Row>
+                  <Row gutter={16} style={{ marginTop: '10px' }}>
+                    <Col span={24}>
+                      <Text>Category: {getCategoryName(queue.category)}</Text>
+                    </Col>
+                  </Row>
+                  <Row gutter={16} style={{ marginTop: '10px' }}>
+                    <Col span={24}>
+                      <Space>
+                        <StarFilled style={{ color: '#fadb14' }} />
+                        <Text>
+                          {(
+                            queue.reviews?.reduce(
+                              (acc, review) => acc + review.rating,
+                              0,
+                            ) / queue.reviews?.length || 0
+                          ).toFixed(1)}
+                        </Text>
+                      </Space>
+                    </Col>
+                  </Row>
+                  <Row gutter={16} style={{ marginTop: '10px' }}>
+                    <Col span={12}>
+                      {participants.includes(queue.id) ? (
+                        <Button
+                          type="primary"
+                          danger
+                          onClick={() => handleLeaveQueue(queue.id)}
+                        >
+                          Leave Queue
+                        </Button>
+                      ) : (
+                        <Button
+                          type="primary"
+                          onClick={() => handleJoinQueue(queue.id)}
+                        >
+                          Join Queue
+                        </Button>
+                      )}
+                    </Col>
+                    <Col span={12}>
+                      <Button
+                        onClick={() => router.push(`/queues/${queue.id}`)}
+                      >
+                        Details
+                      </Button>
+                    </Col>
+                  </Row>
+                </Card>
+              </List.Item>
+            )}
+          />
+        )}
+      </Space>
+      <Modal
+        visible={showLeaveQueueModal}
+        onCancel={() => setShowLeaveQueueModal(false)}
+        onOk={() => handleLeaveQueue(currentQueue?.id || '')}
+        title="Leave Current Queue"
+        okText="Leave Queue"
+        cancelText="Cancel"
+      >
+        <p>
+          You are already in a queue. Do you want to leave the current queue to
+          join another one?
+        </p>
+      </Modal>
+    </PageLayout>
+  )
 }

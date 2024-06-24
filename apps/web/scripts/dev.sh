@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ -f .env ]; then
-  source .env
+  src.env
 fi
 
 PORT_DEFAULT="8099"

@@ -12,25 +12,10 @@ export class ServiceCreateDto {
   serviceName: string
 
   @IsString()
-  @IsOptional()
-  serviceDescription?: string
-
-  @IsString()
-  @IsOptional()
-  queueId?: string
-
-  @IsString()
-  @IsOptional()
-  dateCreated?: string
-
-  @IsString()
-  @IsOptional()
-  dateDeleted?: string
-
-  @IsString()
-  @IsOptional()
-  dateUpdated?: string
+  @IsNotEmpty()
+  queueId: string
 }
+
 
 export class ServiceUpdateDto {
   @IsString()

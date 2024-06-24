@@ -39,8 +39,7 @@ export namespace Api {
     static remove(participantId: string) {
       throw new Error('Method not implemented.')
     }
-}
-
+  }
   export class Favorite extends FavoriteApi {}
 
   export class Booking extends BookingApi {

@@ -1,15 +1,17 @@
-import { Injectable } from '@nestjs/common'
+// apps/server/src/modules/authentication/domain/authentication.domain.facade.ts
+
+import { Injectable } from '@nestjs/common';
 import {
   ConfigurationService,
   ConfigurationServiceObject,
-} from '@server/core/configuration'
-import { CookieService } from '@server/core/cookie'
-import { RequestHelper } from '@server/helpers/request'
-import { User } from '@server/modules/user/domain'
-import { Request, Response } from 'express'
-import * as Jwt from 'jsonwebtoken'
+} from '@server/core/configuration';
+import { CookieService } from '@server/core/cookie';
+import { RequestHelper } from '@server/helpers/request';
+import { User } from '@server/modules/user/domain';
+import { Request, Response } from 'express';
+import * as Jwt from 'jsonwebtoken';
 
-const TIME_24_HOURS = 60 * 60 * 24
+const TIME_24_HOURS = 60 * 60 * 24;
 
 @Injectable()
 export class AuthenticationDomainFacade {
@@ -17,14 +19,15 @@ export class AuthenticationDomainFacade {
     private configurationService: ConfigurationService,
     private cookieService: CookieService,
   ) {}
+
   /* ---------------------------------- TOKEN --------------------------------- */
   buildToken(userId: string, expiresInSeconds = TIME_24_HOURS): string {
-    const payload = { userId }
-    const secret = this.getSecret()
+    const payload = { userId };
+    const secret = this.configurationService.getJwtSecret();
 
-    const token = Jwt.sign(payload, secret, { expiresIn: expiresInSeconds })
+    const token = Jwt.sign(payload, secret, { expiresIn: expiresInSeconds });
 
-    return token
+    return token;
   }
 
   getAccessToken(request: Request): string {
@@ -32,9 +35,9 @@ export class AuthenticationDomainFacade {
       this.configurationService.getAuthenticationTokenMethod() ===
       ConfigurationServiceObject.AuthenticationTokenMethod.COOKIES
     ) {
-      return this.cookieService.getAccessToken(request)
+      return this.cookieService.getAccessToken(request);
     } else {
-      return RequestHelper.getAuthorization(request)
+      return RequestHelper.getAuthorization(request);
     }
   }
 
@@ -43,50 +46,50 @@ export class AuthenticationDomainFacade {
       this.configurationService.getAuthenticationTokenMethod() ===
       ConfigurationServiceObject.AuthenticationTokenMethod.COOKIES
     ) {
-      this.cookieService.setAccessToken(response, token)
-      return {}
+      this.cookieService.setAccessToken(response, token);
+      return {};
     }
 
-    return { token }
+    return { token };
   }
 
   buildTokenResetPassword(user: User): string {
-    const payload = { userId: user.id }
-    const secret = this.getSecret()
+    const payload = { userId: user.id };
+    const secret = this.configurationService.getJwtSecret();
 
-    const token = Jwt.sign(payload, secret, { expiresIn: TIME_24_HOURS })
+    const token = Jwt.sign(payload, secret, { expiresIn: TIME_24_HOURS });
 
-    return token
+    return token;
   }
 
   verifyTokenOrFail(token: string): { userId: string } {
-    const isError = typeof token !== 'string'
+    const isError = typeof token !== 'string';
     if (isError) {
-      throw new Error('Token must be defined')
+      throw new Error('Token must be defined');
     }
 
-    const secret = this.getSecret()
-    const payload = Jwt.verify(token, secret)
+    const secret = this.configurationService.getJwtSecret();
+    const payload = Jwt.verify(token, secret);
 
-    return payload as { userId: string }
+    return payload as { userId: string };
   }
 
   async verifyTokenResetPasswordOrFail(
     token: string,
   ): Promise<{ userId: string }> {
-    const isError = typeof token !== 'string'
+    const isError = typeof token !== 'string';
     if (isError) {
-      throw new Error('Token must be defined')
+      throw new Error('Token must be defined');
     }
 
-    const secret = this.getSecret()
-    const payload = Jwt.verify(token, secret)
+    const secret = this.configurationService.getJwtSecret();
+    const payload = Jwt.verify(token, secret);
 
-    return payload as { userId: string }
+    return payload as { userId: string };
   }
 
   assignRequestPayload(request: Request, payload: { user: User }): void {
-    const store = { ...(request['store'] ?? {}) }
+    const store = { ...(request['store'] ?? {}) };
 
     store.authentication = {
       ...(store.authentication ?? {}),
@@ -95,18 +98,14 @@ export class AuthenticationDomainFacade {
         name: payload.user.name,
         email: payload.user.email,
       },
-    }
+    };
 
-    request['store'] = store
+    request['store'] = store;
   }
 
   getRequestPayload(request: Request): {
-    user: { id: string; name: string; email: string }
+    user: { id: string; name: string; email: string };
   } {
-    return request['store']?.authentication ?? {}
-  }
-
-  private getSecret(): string {
-    return this.configurationService.get('SERVER_AUTHENTICATION_SECRET')
+    return request['store']?.authentication ?? {};
   }
 }

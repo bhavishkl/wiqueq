@@ -22,9 +22,6 @@ export class Service {
   serviceName: string
 
   @Column({ nullable: true })
-  serviceDescription?: string
-
-  @Column({ nullable: true })
   queueId?: string
 
   @ManyToOne(() => Queue, parent => parent.services)

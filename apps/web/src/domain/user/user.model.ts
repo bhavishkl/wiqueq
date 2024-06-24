@@ -10,6 +10,7 @@ import { Booking } from '../booking'
 
 import { Review } from '../review'
 
+import { Model } from '@web/domain'
 export enum UserStatus {
   CREATED = 'CREATED',
   VERIFIED = 'VERIFIED',

@@ -29,6 +29,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
+import moment from 'moment';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
@@ -161,6 +162,8 @@ export default function QueueDetailsPage() {
     return estimatedWaitTime.format('hh:mm A'); // 12-hour format with AM/PM
   };
 
+  const userPosition = participants.findIndex(p => p.userId === userId) + 1;
+
   return (
     <PageLayout layout="narrow">
       <Title level={2}>{queue?.name}</Title>
@@ -170,8 +173,10 @@ export default function QueueDetailsPage() {
         <PhoneOutlined /> {queue?.contactPhone}
       </Paragraph>
       <Paragraph>
-        <ClockCircleOutlined /> <strong>Operating Hours:</strong> {queue?.operatingHours}
-      </Paragraph>
+  <ClockCircleOutlined /> <strong>Operating Hours:</strong> 
+  {moment(queue.operatingHours[0], 'HH:mm').format('h:mm a')} - 
+  {moment(queue.operatingHours[1], 'HH:mm').format('h:mm a')}
+</Paragraph>
       <Paragraph>
         <EnvironmentOutlined /> <strong>Address:</strong> {queue?.location}
       </Paragraph>
@@ -188,10 +193,10 @@ export default function QueueDetailsPage() {
           {isInQueue && (
             <>
               <Paragraph>
-                Your position: {participants.findIndex(p => p.userId === userId) + 1 || 'N/A'}
+                Your position: {userPosition || 'N/A'}
               </Paragraph>
               <Paragraph>
-                Estimated wait time: {calculateEstimatedWaitTime(participants.findIndex(p => p.userId === userId))}
+                Estimated wait time: {calculateEstimatedWaitTime(userPosition - 1)}
               </Paragraph>
             </>
           )}

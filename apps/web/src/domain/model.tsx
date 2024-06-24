@@ -43,7 +43,9 @@ export namespace Model {
 
   export class Review extends ReviewModel {}
 
-  export class Service extends ServiceModel {}
+  export class Service extends ServiceModel {
+    serviceName: ReactNode
+}
 
   export class QueueCategory extends QueueCategoryModel {}
 }

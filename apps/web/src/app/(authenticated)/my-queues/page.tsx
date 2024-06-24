@@ -5,6 +5,7 @@ import {
   CloseCircleOutlined,
   LoadingOutlined,
 } from '@ant-design/icons'
+import { Modal } from 'antd';
 import { Api, Model } from '@web/domain'
 import { PageLayout } from '@web/layouts/Page.layout'
 import { useAuthentication } from '@web/modules/authentication'
@@ -20,7 +21,6 @@ export default function MyQueuePage() {
   const authentication = useAuthentication()
   const userId = authentication.user?.id
   const { enqueueSnackbar } = useSnackbar()
-
   const [user, setUser] = useState<Model.User | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -43,26 +43,29 @@ export default function MyQueuePage() {
   }, [userId])
 
   const handleLeaveQueue = (participantId: string) => {
-    console.log('Leaving queue for participant:', participantId)
-    Api.Participant.remove(participantId)
-      .then(() => {
-        enqueueSnackbar('Left the queue successfully', { variant: 'success' })
+    Modal.confirm({
+      title: 'Leave Queue',
+      content: 'Are you sure you want to leave this queue?',
+      okText: 'Yes',
+      cancelText: 'No',
+      onOk: () => {
+        Api.Participant.remove(participantId);
+        enqueueSnackbar('Left the queue successfully', { variant: 'success' });
         setUser(prevUser => ({
           ...prevUser,
           participants: prevUser.participants.filter(p => p.id !== participantId),
-        }))
-      })
-      .catch(error => {
-        console.error('Failed to leave the queue:', error)
-        enqueueSnackbar('Failed to leave the queue', { variant: 'error' })
-      })
-  }
+        }));
+      },
+    });
+  };
 
   const handleCancelBooking = (bookingId: string) => {
     console.log('Cancelling booking:', bookingId)
     Api.Booking.remove(bookingId)
       .then(() => {
-        enqueueSnackbar('Booking cancelled successfully', { variant: 'success' })
+        enqueueSnackbar('Booking cancelled successfully', {
+          variant: 'success',
+        })
         setUser(prevUser => ({
           ...prevUser,
           bookings: prevUser.bookings.filter(b => b.id !== bookingId),
@@ -72,6 +75,10 @@ export default function MyQueuePage() {
         console.error('Failed to cancel booking:', error)
         enqueueSnackbar('Failed to cancel booking', { variant: 'error' })
       })
+  }
+
+  const handleDetailsClick = (queueId: string) => {
+    router.push(`/queues/${queueId}`)
   }
 
   const calculateEstimatedWaitTime = (queue: Model.Queue, position: number) => {
@@ -113,15 +120,17 @@ export default function MyQueuePage() {
                   <Text>Position: {participant.position ?? 'N/A'}</Text>
                   <br />
                   <Text>
-                    Estimated Wait Time: {calculateEstimatedWaitTime(participant.queue, participant.position)}
+                    Estimated Wait Time:{' '}
+                    {calculateEstimatedWaitTime(
+                      participant.queue,
+                      participant.position,
+                    )}
                   </Text>
                   <br />
                   <Space>
                     <Button
                       type="primary"
-                      onClick={() =>
-                        router.push(`/queues/${participant.queue?.id}`)
-                      }
+                      onClick={() => handleDetailsClick(participant.queue?.id)}
                     >
                       Details
                     </Button>

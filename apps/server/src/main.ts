@@ -1,38 +1,37 @@
-import { ValidationPipe } from '@nestjs/common'
-import { NestFactory } from '@nestjs/core'
-import * as CookieParser from 'cookie-parser'
-import { ConfigurationService } from './core/configuration'
-import { CorsService } from './core/cors'
-import { RequestHelper } from './helpers/request'
-import { LoggerService } from './libraries/logger'
-import { AppModule } from './modules/app.module'
+import { ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import * as CookieParser from 'cookie-parser';
+import { ConfigurationService } from './core/configuration';
+import { RequestHelper } from './helpers/request';
+import { LoggerService } from './libraries/logger';
+import { AppModule } from './modules/app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule)
+  const app = await NestFactory.create(AppModule);
 
-  const configurationService = app.get(ConfigurationService)
+  const configurationService = app.get(ConfigurationService);
+  const loggerService = app.get(LoggerService);
 
-  const corsService = app.get(CorsService)
+  const logger = loggerService.create({ name: 'App' });
 
-  const loggerService = app.get(LoggerService)
+  const port = configurationService.getPort();
 
-  const logger = loggerService.create({ name: 'App' })
+  app.use(RequestHelper.handleRawBody);
 
-  const port = configurationService.getPort()
+  app.enableCors({
+    origin: 'http://localhost:8099',
+    credentials: true,
+  });
 
-  app.use(RequestHelper.handleRawBody)
+  app.use(CookieParser());
 
-  app.enableCors(corsService.getOptions())
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
 
-  app.use(CookieParser())
+  app.setGlobalPrefix('api');
 
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true }))
+  await app.listen(port);
 
-  app.setGlobalPrefix('api')
-
-  await app.listen(port)
-
-  logger.success(`Application started on port ${port}`)
+  logger.success(`Application started on port ${port}`);
 }
 
-bootstrap()
+bootstrap();

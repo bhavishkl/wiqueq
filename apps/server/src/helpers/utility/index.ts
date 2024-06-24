@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid'
 
 export namespace Utility {
   export function sleep(milliseconds: number): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       setTimeout(() => {
         resolve()
       }, milliseconds)
@@ -43,9 +43,11 @@ export namespace Utility {
     return Array.from(uniqueSet)
   }
 
-  export function removeTrailingSlash(content: string): string {
+  export function removeTrailingSlash(content: string | undefined | null): string {
+    if (!isDefined(content)) {
+      return ''
+    }
     const REGEX_SLASH = /\/$/g
-
     return content.replace(REGEX_SLASH, '')
   }
 
@@ -54,16 +56,12 @@ export namespace Utility {
       return true
     }
 
-    const isArray = Array.isArray(value)
-
-    if (isArray) {
+    if (Array.isArray(value)) {
       return value.length === 0
     }
 
-    const isString = typeof value === 'string'
-
-    if (isString) {
-      return value.trim() !== ''
+    if (typeof value === 'string') {
+      return value.trim() === ''
     }
 
     return false
