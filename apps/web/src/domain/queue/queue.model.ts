@@ -54,4 +54,6 @@ export class Queue {
   averageTime?: string // Added missing property
   
   operatingDays?: string[] // Added missing property
+
+  city?: string; // Add the city property
 }

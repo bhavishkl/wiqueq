@@ -21,8 +21,9 @@ import debounce from 'lodash/debounce'
 import { useRouter } from 'next/navigation'
 import { useSnackbar } from 'notistack'
 import { useCallback, useEffect, useState } from 'react'
-import { useMemo } from 'react'
+import { ClockCircleOutlined, UserOutlined } from '@ant-design/icons';
 
+import { useMemo } from 'react'
 const { Title, Text } = Typography
 const { Search } = Input
 const { Option } = Select
@@ -225,8 +226,6 @@ export default function HomePage() {
 
   return (
     <PageLayout layout="narrow">
-      <Title level={2}>Virtual Queues</Title>
-      <Text>Choose a queue to join or add to your favorites</Text>
       <Space direction="vertical" style={{ width: '100%' }}>
         <Search
           placeholder="Search queues"
@@ -249,7 +248,14 @@ export default function HomePage() {
           <Spin tip="Loading..." />
         ) : (
           <List
-            grid={{ gutter: 16, column: 2 }}
+          grid={{
+            gutter: 16,
+            xs: 1, // One column on extra small screens
+            sm: 1, // One column on small screens
+            md: 2, // Two columns on medium screens
+            lg: 2, // Two columns on large screens
+            xl: 2, // Two columns on extra large screens
+          }}
             dataSource={filteredQueues}
             renderItem={queue => (
               <List.Item>
@@ -270,29 +276,30 @@ export default function HomePage() {
                   }
                   style={{ width: '100%' }}
                 >
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <Text>
-                        Estimated Wait Time:{' '}
-                        {memoizedCalculateEstimatedWaitTime(
-                          queue.averageTime,
-                          participantsCount[queue.id],
-                        )}{' '}
-                        mins
-                      </Text>
-                    </Col>
-                    <Col span={12}>
-                      <Text>Participants: {participantsCount[queue.id]}</Text>
-                    </Col>
-                  </Row>
+                 <Row gutter={16}>
+          <Col xs={24} sm={12}>
+            <Space align="baseline">
+              <ClockCircleOutlined />
+              <Text>
+                ETA:{' '}
+                {memoizedCalculateEstimatedWaitTime(
+                  queue.averageTime,
+                  participantsCount[queue.id],
+                )}{' '}
+                mins
+              </Text>
+            </Space>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Space align="baseline">
+              <UserOutlined />
+              <Text>Participants: {participantsCount[queue.id]}</Text>
+            </Space>
+          </Col>
+        </Row>
                   <Row gutter={16} style={{ marginTop: '10px' }}>
                     <Col span={24}>
-                      <Text>Category: {getCategoryName(queue.category)}</Text>
-                    </Col>
-                  </Row>
-                  <Row gutter={16} style={{ marginTop: '10px' }}>
-                    <Col span={24}>
-                      <Space>
+                    <Space direction="vertical" style={{ width: '100%' }}>
                         <StarFilled style={{ color: '#fadb14' }} />
                         <Text>
                           {(

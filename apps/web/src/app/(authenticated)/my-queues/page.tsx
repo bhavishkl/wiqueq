@@ -62,14 +62,19 @@ export default function MyQueuePage() {
   const handleCancelBooking = (bookingId: string) => {
     console.log('Cancelling booking:', bookingId)
     Api.Booking.remove(bookingId)
-      .then(() => {
-        enqueueSnackbar('Booking cancelled successfully', {
-          variant: 'success',
-        })
-        setUser(prevUser => ({
-          ...prevUser,
-          bookings: prevUser.bookings.filter(b => b.id !== bookingId),
-        }))
+      .then(response => {
+        if (response.ok) {
+          enqueueSnackbar('Booking cancelled successfully', {
+            variant: 'success',
+          })
+          setUser(prevUser => ({
+            ...prevUser,
+            bookings: prevUser.bookings.filter(b => b.id !== bookingId),
+          }))
+        } else {
+          console.error('Failed to cancel booking:', response.statusText)
+          enqueueSnackbar('Failed to cancel booking', { variant: 'error' })
+        }
       })
       .catch(error => {
         console.error('Failed to cancel booking:', error)
